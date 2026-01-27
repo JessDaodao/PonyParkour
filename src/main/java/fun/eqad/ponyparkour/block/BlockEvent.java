@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -48,9 +49,41 @@ public class BlockEvent implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             player.sendMessage(plugin.getConfigManager().getPrefix() + "§c不好, 你死翘翘了!");
         } else if (type == Material.STICKY_PISTON) {
-            Vector velocity = player.getLocation().getDirection().multiply(0.5).setY(1.2);
-            player.setVelocity(velocity);
-            player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.0f);
+            if (blockUnder.getBlockData() instanceof Directional) {
+                Directional directional = (Directional) blockUnder.getBlockData();
+                BlockFace facing = directional.getFacing();
+                
+                Vector velocity = new Vector(0, 0, 0);
+                double strength = 1.5;
+                double verticalBoost = 0.5;
+
+                switch (facing) {
+                    case UP:
+                        velocity.setY(strength);
+                        break;
+                    case DOWN:
+                        velocity.setY(-strength);
+                        break;
+                    case NORTH:
+                        velocity.setZ(-strength).setY(verticalBoost);
+                        break;
+                    case SOUTH:
+                        velocity.setZ(strength).setY(verticalBoost);
+                        break;
+                    case WEST:
+                        velocity.setX(-strength).setY(verticalBoost);
+                        break;
+                    case EAST:
+                        velocity.setX(strength).setY(verticalBoost);
+                        break;
+                    default:
+                        velocity.setY(strength);
+                        break;
+                }
+                
+                player.setVelocity(velocity);
+                player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.0f);
+            }
         }
     }
 }
