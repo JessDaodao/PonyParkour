@@ -49,12 +49,31 @@ public class ParkourListener implements Listener {
         String prefix = plugin.getConfigManager().getPrefix();
 
         if (session.isFalling()) {
+            if (isSameBlock(to, arena.getStartLocation())) {
+                session.setFalling(false);
+                session.resetStartTime();
+                player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOW_FALLING);
+                player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOW);
+                player.removePotionEffect(org.bukkit.potion.PotionEffectType.JUMP);
+                player.setWalkSpeed(0.2f);
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§a开始计时"));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
+                return;
+            }
+
+            if (from.getX() != to.getX() || from.getZ() != to.getZ()) {
+                Location newTo = from.clone();
+                newTo.setY(to.getY());
+                newTo.setYaw(to.getYaw());
+                newTo.setPitch(to.getPitch());
+                event.setTo(newTo);
+            }
             return;
         }
 
         if (arena.getFallY() != null && to.getY() < arena.getFallY()) {
             player.teleport(session.getLastCheckpointLocation());
-            player.sendMessage(prefix + "§c你掉下去了！已传送回最近的检查点。");
+            player.sendMessage(prefix + "§c你掉下去了TAT");
             return;
         }
 

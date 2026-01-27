@@ -9,7 +9,6 @@ public class ParkourSession {
     private int currentCheckpointIndex;
     private long startTime;
     private boolean isFalling;
-    private java.util.UUID rideEntityUuid;
 
     public ParkourSession(Player player, ParkourArena arena) {
         this.player = player;
@@ -30,13 +29,6 @@ public class ParkourSession {
         }
     }
 
-    public java.util.UUID getRideEntityUuid() {
-        return rideEntityUuid;
-    }
-
-    public void setRideEntityUuid(java.util.UUID rideEntityUuid) {
-        this.rideEntityUuid = rideEntityUuid;
-    }
 
     public void resetStartTime() {
         this.startTime = System.currentTimeMillis();

@@ -256,7 +256,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                         break;
                     case "author":
                         if (args.length < 4) {
-                            player.sendMessage(prefix + "§c用法: /parkour set author <名称> <作者>");
+                            player.sendMessage(prefix + "§c用法: /parkour set author <名称> <制作人员>");
                             return true;
                         }
                         String author = args[3];
@@ -268,7 +268,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                             author = sb.toString().trim();
                         }
                         arena.setAuthor(author);
-                        player.sendMessage(prefix + "§a已设置 " + arenaName + " 的作者为 " + author);
+                        player.sendMessage(prefix + "§a已设置 " + arenaName + " 的制作人员为 " + author);
                         break;
                     default:
                         player.sendMessage(prefix + "§c用法: /parkour set <lobby|start|end|checkpoint|icon|fall|author> [名称]");
