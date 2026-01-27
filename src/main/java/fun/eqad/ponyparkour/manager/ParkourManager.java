@@ -80,7 +80,7 @@ public class ParkourManager {
     public void endSession(Player player) {
         if (sessions.containsKey(player.getUniqueId())) {
             sessions.remove(player.getUniqueId());
-            
+
             Location lobby = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getLobbyLocation();
             if (lobby != null) {
                 player.teleport(lobby);

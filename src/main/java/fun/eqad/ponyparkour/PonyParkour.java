@@ -12,6 +12,7 @@ public final class PonyParkour extends JavaPlugin {
     private fun.eqad.ponyparkour.gui.GUIManager guiManager;
     private fun.eqad.ponyparkour.listener.ParkourListener parkourListener;
     private fun.eqad.ponyparkour.block.BlockEvent blockEvent;
+    private fun.eqad.ponyparkour.manager.GhostBlockManager ghostBlockManager;
     private fun.eqad.ponyparkour.config.ConfigManager configManager;
     private fun.eqad.ponyparkour.data.DataManager dataManager;
 
@@ -34,6 +35,7 @@ public final class PonyParkour extends JavaPlugin {
         this.guiManager = new fun.eqad.ponyparkour.gui.GUIManager(this);
         this.parkourListener = new fun.eqad.ponyparkour.listener.ParkourListener(this);
         this.blockEvent = new fun.eqad.ponyparkour.block.BlockEvent(this);
+        this.ghostBlockManager = new fun.eqad.ponyparkour.manager.GhostBlockManager(this);
         this.commandManager = new CommandManager(this);
         
         getCommand("parkour").setExecutor(commandManager);
@@ -49,6 +51,9 @@ public final class PonyParkour extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (ghostBlockManager != null) {
+            ghostBlockManager.restoreAllBlocks();
+        }
         if (dataManager != null) {
             dataManager.saveArenas();
         }
@@ -70,5 +75,8 @@ public final class PonyParkour extends JavaPlugin {
     }
     public fun.eqad.ponyparkour.data.DataManager getDataManager() {
         return dataManager;
+    }
+    public fun.eqad.ponyparkour.manager.GhostBlockManager getGhostBlockManager() {
+        return ghostBlockManager;
     }
 }

@@ -32,9 +32,15 @@ public class BlockEvent implements Listener {
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         if (!parkourManager.isPlaying(player)) return;
-
+        
         Location to = event.getTo();
         if (to == null) return;
+
+        if (event.getFrom().getBlockX() != to.getBlockX() || 
+            event.getFrom().getBlockY() != to.getBlockY() || 
+            event.getFrom().getBlockZ() != to.getBlockZ()) {
+            plugin.getGhostBlockManager().scanNearbyBlocks(player);
+        }
 
         Block blockUnder = to.getBlock().getRelative(BlockFace.DOWN);
         Material type = blockUnder.getType();
