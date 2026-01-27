@@ -11,6 +11,7 @@ public final class PonyParkour extends JavaPlugin {
     private CommandManager commandManager;
     private fun.eqad.ponyparkour.gui.GUIManager guiManager;
     private fun.eqad.ponyparkour.listener.ParkourListener parkourListener;
+    private fun.eqad.ponyparkour.block.BlockEvent blockEvent;
     private fun.eqad.ponyparkour.config.ConfigManager configManager;
     private fun.eqad.ponyparkour.data.DataManager dataManager;
 
@@ -32,6 +33,7 @@ public final class PonyParkour extends JavaPlugin {
         this.dataManager.loadArenas();
         this.guiManager = new fun.eqad.ponyparkour.gui.GUIManager(this);
         this.parkourListener = new fun.eqad.ponyparkour.listener.ParkourListener(this);
+        this.blockEvent = new fun.eqad.ponyparkour.block.BlockEvent(this);
         this.commandManager = new CommandManager(this);
         
         getCommand("parkour").setExecutor(commandManager);
