@@ -3,3 +3,9 @@ version: '1.0'
 main: fun.eqad.ponyparkour.PonyParkour
 api-version: '1.20'
 author: EQAD Network
+softdepend: [PlaceholderAPI]
+commands:
+  parkour:
+    description: Main command for PonyParkour
+    usage: /parkour <subcommand>
+    aliases: [pk]
