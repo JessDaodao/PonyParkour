@@ -12,6 +12,8 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -90,7 +92,7 @@ public class ParkourListener implements Listener {
                             int b = (int) (startB + (endB - startB) * ratio);
                             
                             ChatColor color = ChatColor.of(new java.awt.Color(r, g, b));
-                            String message = color + "§l到达检查点 " + checkpointNum + " !";
+                            String message = color + "到达检查点 " + checkpointNum + "!";
                             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
                             
                             tick++;
@@ -105,6 +107,27 @@ public class ParkourListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         parkourManager.endSession(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            if (parkourManager.isPlaying(player)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            if (parkourManager.isPlaying(player)) {
+                event.setCancelled(true);
+                player.setFoodLevel(20);
+            }
+        }
     }
 
     private boolean isSameBlock(Location loc1, Location loc2) {

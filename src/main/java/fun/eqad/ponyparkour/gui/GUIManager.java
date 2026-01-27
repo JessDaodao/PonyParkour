@@ -64,7 +64,9 @@ public class GUIManager implements Listener {
             if (meta != null) {
                 meta.setDisplayName(ChatColor.GREEN + arena.getName());
                 List<String> lore = new ArrayList<>();
-                lore.add(ChatColor.GRAY + "点击加入!");
+                lore.add(ChatColor.GRAY + "作者: " + ChatColor.YELLOW + arena.getAuthor());
+                lore.add("");
+                lore.add(ChatColor.GRAY + "点击游玩!");
                 meta.setLore(lore);
                 item.setItemMeta(meta);
             }

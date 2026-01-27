@@ -127,6 +127,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                                     if (uuids != null) {
                                         for (java.util.UUID uuid : uuids) {
                                             arenaDel.addPointHologram("checkpoint_" + (i - 1), uuid);
+                                            
+                                            org.bukkit.entity.Entity entity = org.bukkit.Bukkit.getEntity(uuid);
+                                            if (entity != null && entity.getCustomName() != null && entity.getCustomName().equals(String.valueOf(i + 1))) {
+                                                entity.setCustomName(String.valueOf(i));
+                                            }
                                         }
                                     }
                                 }
@@ -146,7 +151,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 break;
             case "set":
                 if (args.length < 2) {
-                    player.sendMessage(prefix + "§c用法: /parkour set <lobby|start|end|checkpoint|icon|fall> [名称]");
+                    player.sendMessage(prefix + "§c用法: /parkour set <lobby|start|end|checkpoint|icon|fall|author> [名称]");
                     return true;
                 }
                 String setType = args[1].toLowerCase();
@@ -249,8 +254,24 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                         arena.setFallY(fallY);
                         player.sendMessage(prefix + "§a已设置 " + arenaName + " 的掉落高度为 " + fallY);
                         break;
+                    case "author":
+                        if (args.length < 4) {
+                            player.sendMessage(prefix + "§c用法: /parkour set author <名称> <作者>");
+                            return true;
+                        }
+                        String author = args[3];
+                        if (args.length > 4) {
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 3; i < args.length; i++) {
+                                sb.append(args[i]).append(" ");
+                            }
+                            author = sb.toString().trim();
+                        }
+                        arena.setAuthor(author);
+                        player.sendMessage(prefix + "§a已设置 " + arenaName + " 的作者为 " + author);
+                        break;
                     default:
-                        player.sendMessage(prefix + "§c用法: /parkour set <lobby|start|end|checkpoint|icon> [名称]");
+                        player.sendMessage(prefix + "§c用法: /parkour set <lobby|start|end|checkpoint|icon|fall|author> [名称]");
                         break;
                 }
                 break;
@@ -303,8 +324,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         sender.sendMessage(prefix + "§7PonyParkour帮助:");
         if (aliases) {
             sender.sendMessage(" §7/pk create <名称> §8- §7创建跑酷地图");
-            sender.sendMessage(" §7/pk delete <名称> §8- §7删除跑酷地图");
-            sender.sendMessage(" §7/pk set <start|end|checkpoint|icon|lobby> <名称> §8- §7设置地图点位");
+            sender.sendMessage(" §7/pk delete <参数> <名称> §8- §7删除地图或地图点位");
+            sender.sendMessage(" §7/pk set <参数> <名称> §8- §7设置地图点位");
             sender.sendMessage(" §7/pk join <名称> §8- §7加入跑酷");
             sender.sendMessage(" §7/pk leave §8- §7离开跑酷");
             sender.sendMessage(" §7/pk gui §8- §7打开地图列表");
@@ -312,8 +333,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             sender.sendMessage(" §7/pk about §8- §7关于插件");
         } else {
             sender.sendMessage(" §7/parkour create <名称> §8- §7创建跑酷地图");
-            sender.sendMessage(" §7/parkour delete <名称> §8- §7删除跑酷地图");
-            sender.sendMessage(" §7/parkour set <start|end|checkpoint|icon|lobby> <名称> §8- §7设置地图");
+            sender.sendMessage(" §7/parkour delete <参数> <名称> §8- §7删除地图或地图点位");
+            sender.sendMessage(" §7/parkour set <参数> <名称> §8- §7设置地图点位");
             sender.sendMessage(" §7/parkour join <名称> §8- §7加入跑酷");
             sender.sendMessage(" §7/parkour leave §8- §7离开跑酷");
             sender.sendMessage(" §7/parkour gui §8- §7打开地图列表");
@@ -351,7 +372,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             } else if (subCommand.equals("delete")) {
                 return StringUtil.copyPartialMatches(args[1], Arrays.asList("arena", "checkpoint", "start", "end"), new ArrayList<>());
             } else if (subCommand.equals("set")) {
-                return StringUtil.copyPartialMatches(args[1], Arrays.asList("checkpoint", "start", "end", "lobby", "icon", "fall"), new ArrayList<>());
+                return StringUtil.copyPartialMatches(args[1], Arrays.asList("checkpoint", "start", "end", "lobby", "icon", "fall", "author"), new ArrayList<>());
             }
         } else if (args.length == 3) {
             if (args[0].equalsIgnoreCase("set") || args[0].equalsIgnoreCase("delete")) {

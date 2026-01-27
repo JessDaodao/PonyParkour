@@ -54,7 +54,11 @@ public class ParkourManager {
         ParkourSession session = new ParkourSession(player, arena);
         sessions.put(player.getUniqueId(), session);
         player.teleport(arena.getStartLocation());
-        player.sendMessage("§a跑酷开始: " + arena.getName());
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setSaturation(20);
+        String prefix = fun.eqad.ponyparkour.PonyParkour.getInstance().getConfigManager().getPrefix();
+        player.sendMessage(prefix + "§a跑酷开始: " + arena.getName());
     }
 
     public void endSession(Player player) {

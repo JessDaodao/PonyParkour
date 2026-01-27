@@ -15,6 +15,7 @@ public class ParkourArena {
     private List<java.util.UUID> hologramUuids;
     private java.util.Map<String, List<java.util.UUID>> pointHolograms;
     private Integer fallY;
+    private String author;
 
     public ParkourArena(String name) {
         this.name = name;
@@ -23,6 +24,7 @@ public class ParkourArena {
         this.hologramUuids = new ArrayList<>();
         this.pointHolograms = new java.util.HashMap<>();
         this.fallY = null;
+        this.author = "Unknown";
     }
 
     public List<java.util.UUID> getHologramUuids() {
@@ -92,5 +94,13 @@ public class ParkourArena {
 
     public void setFallY(Integer fallY) {
         this.fallY = fallY;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 }

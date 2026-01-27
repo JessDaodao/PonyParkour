@@ -96,6 +96,9 @@ public class DataManager {
                 if (arenaData.containsKey("fallY")) {
                     arena.setFallY(((Number) arenaData.get("fallY")).intValue());
                 }
+                if (arenaData.containsKey("author")) {
+                    arena.setAuthor((String) arenaData.get("author"));
+                }
 
                 parkourManager.getArenas().put(name, arena);
                 }
@@ -147,6 +150,9 @@ public class DataManager {
             
             if (arena.getFallY() != null) {
                 arenaData.put("fallY", arena.getFallY());
+            }
+            if (arena.getAuthor() != null) {
+                arenaData.put("author", arena.getAuthor());
             }
 
             arenasData.put(arena.getName(), arenaData);
