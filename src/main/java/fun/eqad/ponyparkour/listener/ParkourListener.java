@@ -11,12 +11,15 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.spigotmc.event.entity.EntityDismountEvent;
 
 import java.util.List;
 
@@ -46,21 +49,6 @@ public class ParkourListener implements Listener {
         String prefix = plugin.getConfigManager().getPrefix();
 
         if (session.isFalling()) {
-            if (from.getX() != to.getX() || from.getZ() != to.getZ()) {
-                Location newLoc = from.clone();
-                newLoc.setY(to.getY());
-                newLoc.setYaw(to.getYaw());
-                newLoc.setPitch(to.getPitch());
-                event.setTo(newLoc);
-            }
-
-            if (isSameBlock(to, arena.getStartLocation())) {
-                session.setFalling(false);
-                session.resetStartTime();
-                player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOW_FALLING);
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§a开始计时"));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
-            }
             return;
         }
 
@@ -147,6 +135,19 @@ public class ParkourListener implements Listener {
             if (parkourManager.isPlaying(player)) {
                 event.setCancelled(true);
                 player.setFoodLevel(20);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDismount(EntityDismountEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            if (parkourManager.isPlaying(player)) {
+                ParkourSession session = parkourManager.getSession(player);
+                if (session.isFalling()) {
+                    event.setCancelled(true);
+                }
             }
         }
     }
