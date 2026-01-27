@@ -6,6 +6,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,12 +55,17 @@ public class ParkourManager {
         }
         ParkourSession session = new ParkourSession(player, arena);
         sessions.put(player.getUniqueId(), session);
-        player.teleport(arena.getStartLocation());
+        
+        Location startLoc = arena.getStartLocation().clone().add(0, 20, 0);
+        player.teleport(startLoc);
+        
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 200, 1, false, false));
+        
         player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
         player.setSaturation(20);
-        String prefix = fun.eqad.ponyparkour.PonyParkour.getInstance().getConfigManager().getPrefix();
-        player.sendMessage(prefix + "§a跑酷开始: " + arena.getName());
+        
+        player.sendTitle("§a" + arena.getName(), "§7作者: " + arena.getAuthor(), 10, 70, 20);
     }
 
     public void endSession(Player player) {

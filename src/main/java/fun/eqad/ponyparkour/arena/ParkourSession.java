@@ -8,11 +8,28 @@ public class ParkourSession {
     private final ParkourArena arena;
     private int currentCheckpointIndex;
     private long startTime;
+    private boolean isFalling;
 
     public ParkourSession(Player player, ParkourArena arena) {
         this.player = player;
         this.arena = arena;
         this.currentCheckpointIndex = -1;
+        this.startTime = System.currentTimeMillis();
+        this.isFalling = true;
+    }
+
+    public boolean isFalling() {
+        return isFalling;
+    }
+
+    public void setFalling(boolean falling) {
+        isFalling = falling;
+        if (!falling) {
+            this.startTime = System.currentTimeMillis();
+        }
+    }
+
+    public void resetStartTime() {
         this.startTime = System.currentTimeMillis();
     }
 

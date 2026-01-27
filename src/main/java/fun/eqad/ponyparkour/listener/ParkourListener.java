@@ -39,10 +39,30 @@ public class ParkourListener implements Listener {
         ParkourSession session = parkourManager.getSession(player);
         ParkourArena arena = session.getArena();
         Location to = event.getTo();
+        Location from = event.getFrom();
 
         if (to == null) return;
 
         String prefix = plugin.getConfigManager().getPrefix();
+
+        if (session.isFalling()) {
+            if (from.getX() != to.getX() || from.getZ() != to.getZ()) {
+                Location newLoc = from.clone();
+                newLoc.setY(to.getY());
+                newLoc.setYaw(to.getYaw());
+                newLoc.setPitch(to.getPitch());
+                event.setTo(newLoc);
+            }
+
+            if (isSameBlock(to, arena.getStartLocation())) {
+                session.setFalling(false);
+                session.resetStartTime();
+                player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOW_FALLING);
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§a开始计时"));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
+            }
+            return;
+        }
 
         if (arena.getFallY() != null && to.getY() < arena.getFallY()) {
             player.teleport(session.getLastCheckpointLocation());
@@ -67,6 +87,7 @@ public class ParkourListener implements Listener {
                     player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 2.0f);
                     
                     final int checkpointNum = i + 1;
+                    final int totalCheckpoints = checkpoints.size();
                     new BukkitRunnable() {
                         int tick = 0;
                         final int duration = 20;
@@ -92,7 +113,7 @@ public class ParkourListener implements Listener {
                             int b = (int) (startB + (endB - startB) * ratio);
                             
                             ChatColor color = ChatColor.of(new java.awt.Color(r, g, b));
-                            String message = color + "到达检查点 " + checkpointNum + "!";
+                            String message = color + "检查点 (" + checkpointNum + "/" + totalCheckpoints + ")";
                             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
                             
                             tick++;

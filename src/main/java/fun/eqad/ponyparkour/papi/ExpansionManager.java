@@ -42,10 +42,16 @@ public class ExpansionManager extends PlaceholderExpansion {
         if (params.equalsIgnoreCase("time")) {
             if (plugin.getParkourManager().isPlaying(player)) {
                 ParkourSession session = plugin.getParkourManager().getSession(player);
+                if (session.isFalling()) {
+                    return "00:00.000";
+                }
                 long timeTaken = System.currentTimeMillis() - session.getStartTime();
-                return String.format("%.2f", timeTaken / 1000.0);
+                long minutes = (timeTaken / 1000) / 60;
+                long seconds = (timeTaken / 1000) % 60;
+                long millis = timeTaken % 1000;
+                return String.format("%02d:%02d.%03d", minutes, seconds, millis);
             }
-            return "0.00";
+            return "00:00.000";
         }
 
         // %ponyparkour_arena_name%
