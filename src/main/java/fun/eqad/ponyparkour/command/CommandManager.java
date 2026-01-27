@@ -5,6 +5,9 @@ import fun.eqad.ponyparkour.arena.ParkourArena;
 import fun.eqad.ponyparkour.manager.ParkourManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -90,14 +93,20 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 switch (setType) {
                     case "start":
                         arena.setStartLocation(player.getLocation());
+                        player.getLocation().getBlock().setType(Material.OAK_PRESSURE_PLATE);
+                        placeWallSign(player, "§a[起点]", arenaName);
                         player.sendMessage(prefix + "§a已设置 " + arenaName + " 的起点");
                         break;
                     case "end":
                         arena.setEndLocation(player.getLocation());
+                        player.getLocation().getBlock().setType(Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
+                        placeWallSign(player, "§c[终点]", arenaName);
                         player.sendMessage(prefix + "§a已设置 " + arenaName + " 的终点");
                         break;
                     case "checkpoint":
                         arena.addCheckpoint(player.getLocation());
+                        player.getLocation().getBlock().setType(Material.STONE_PRESSURE_PLATE);
+                        placeWallSign(player, "§b[检查点]", String.valueOf(arena.getCheckpoints().size()));
                         player.sendMessage(prefix + "§a已为 " + arenaName + " 添加检查点");
                         break;
                     case "icon":
@@ -219,5 +228,25 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         
         Collections.sort(completions);
         return completions;
+    }
+
+    private void placeWallSign(Player player, String line1, String line2) {
+        Block targetBlock = player.getLocation().getBlock().getRelative(player.getFacing().getOppositeFace());
+        if (targetBlock.getType() != Material.AIR) {
+            Block signBlock = player.getLocation().getBlock().getRelative(0, 1, 0).getRelative(player.getFacing().getOppositeFace());
+            signBlock.setType(Material.OAK_WALL_SIGN);
+            
+            if (signBlock.getState() instanceof Sign) {
+                Sign sign = (Sign) signBlock.getState();
+                if (sign.getBlockData() instanceof WallSign) {
+                    WallSign wallSign = (WallSign) sign.getBlockData();
+                    wallSign.setFacing(player.getFacing());
+                    sign.setBlockData(wallSign);
+                }
+                sign.setLine(0, line1);
+                sign.setLine(1, line2);
+                sign.update();
+            }
+        }
     }
 }

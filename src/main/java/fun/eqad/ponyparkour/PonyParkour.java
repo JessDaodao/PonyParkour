@@ -16,6 +16,15 @@ public final class PonyParkour extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        getLogger().info("   ___                    ___           _");
+        getLogger().info("  / _ \\___  _ __  _   _  / _ \\__ _ _ __| | _____  _   _ _ __");
+        getLogger().info(" / /_)/ _ \\| '_ \\| | | |/ /_)/ _` | '__| |/ / _ \\| | | | '__|");
+        getLogger().info("/ ___/ (_) | | | | |_| / ___/ (_| | |  |   < (_) | |_| | |");
+        getLogger().info("\\/    \\___/|_| |_|\\__, \\/    \\__,_|_|  |_|\\_\\___/ \\__,_|_|");
+        getLogger().info("                  |___/");
+        getLogger().info("草, 走, 忽略");
+        getLogger().info("Author: EQAD Network");
+
         instance = this;
         this.parkourManager = new ParkourManager();
         this.configManager = new fun.eqad.ponyparkour.config.ConfigManager(this);
@@ -30,22 +39,10 @@ public final class PonyParkour extends JavaPlugin {
 
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new fun.eqad.ponyparkour.papi.ExpansionManager(this).register();
-            getLogger().info("PlaceholderAPI hook registered!");
-        } else {
-            getLogger().warning("PlaceholderAPI not found, placeholders will not work.");
+            getLogger().info("检测到PlaceholderAPI, 已启用相关支持");
         }
-    }
 
-    public static PonyParkour getInstance() {
-        return instance;
-    }
-
-    public ParkourManager getParkourManager() {
-        return parkourManager;
-    }
-
-    public fun.eqad.ponyparkour.gui.GUIManager getGuiManager() {
-        return guiManager;
+        getLogger().info("PonyParkour已成功加载");
     }
 
     @Override
@@ -53,12 +50,22 @@ public final class PonyParkour extends JavaPlugin {
         if (dataManager != null) {
             dataManager.saveArenas();
         }
+
+        getLogger().info("PonyParkour已成功卸载");
     }
 
+    public static PonyParkour getInstance() {
+        return instance;
+    }
+    public ParkourManager getParkourManager() {
+        return parkourManager;
+    }
+    public fun.eqad.ponyparkour.gui.GUIManager getGuiManager() {
+        return guiManager;
+    }
     public fun.eqad.ponyparkour.config.ConfigManager getConfigManager() {
         return configManager;
     }
-
     public fun.eqad.ponyparkour.data.DataManager getDataManager() {
         return dataManager;
     }
