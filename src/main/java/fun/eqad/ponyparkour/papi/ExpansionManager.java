@@ -48,6 +48,15 @@ public class ExpansionManager extends PlaceholderExpansion {
             return "0.00";
         }
 
+        // %ponyparkour_arena_name%
+        if (params.equalsIgnoreCase("arena_name")) {
+            if (plugin.getParkourManager().isPlaying(player)) {
+                ParkourSession session = plugin.getParkourManager().getSession(player);
+                return session.getArena().getName();
+            }
+            return "None";
+        }
+
         return null;
     }
 }

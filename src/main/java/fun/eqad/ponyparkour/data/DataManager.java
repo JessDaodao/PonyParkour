@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class DataManager {
 
@@ -24,26 +25,42 @@ public class DataManager {
     private final ParkourManager parkourManager;
     private final File arenasFile;
     private final Gson gson;
+    private Location lobbyLocation;
 
     public DataManager(PonyParkour plugin) {
         this.plugin = plugin;
         this.parkourManager = plugin.getParkourManager();
-        this.arenasFile = new File(plugin.getDataFolder(), "arenas.json");
+        this.arenasFile = new File(plugin.getDataFolder(), "data.json");
         this.gson = new GsonBuilder().setPrettyPrinting().create();
+    }
+
+    public Location getLobbyLocation() {
+        return lobbyLocation;
+    }
+
+    public void setLobbyLocation(Location lobbyLocation) {
+        this.lobbyLocation = lobbyLocation;
+        saveArenas();
     }
 
     public void loadArenas() {
         if (!arenasFile.exists()) return;
 
         try (Reader reader = new FileReader(arenasFile)) {
-            Type type = new TypeToken<Map<String, Map<String, Object>>>(){}.getType();
-            Map<String, Map<String, Object>> data = gson.fromJson(reader, type);
+            Type type = new TypeToken<Map<String, Object>>(){}.getType();
+            Map<String, Object> rootData = gson.fromJson(reader, type);
 
-            if (data == null) return;
+            if (rootData == null) return;
 
-            for (Map.Entry<String, Map<String, Object>> entry : data.entrySet()) {
-                String name = entry.getKey();
-                Map<String, Object> arenaData = entry.getValue();
+            if (rootData.containsKey("lobby")) {
+                this.lobbyLocation = deserializeLocation((Map<String, Object>) rootData.get("lobby"));
+            }
+
+            if (rootData.containsKey("arenas")) {
+                Map<String, Map<String, Object>> arenasData = (Map<String, Map<String, Object>>) rootData.get("arenas");
+                for (Map.Entry<String, Map<String, Object>> entry : arenasData.entrySet()) {
+                    String name = entry.getKey();
+                    Map<String, Object> arenaData = entry.getValue();
                 ParkourArena arena = new ParkourArena(name);
 
                 if (arenaData.containsKey("start")) {
@@ -61,8 +78,27 @@ public class DataManager {
                 if (arenaData.containsKey("icon")) {
                     arena.setIcon(Material.valueOf((String) arenaData.get("icon")));
                 }
+                if (arenaData.containsKey("holograms")) {
+                    List<String> hologramUuids = (List<String>) arenaData.get("holograms");
+                    for (String uuidStr : hologramUuids) {
+                        arena.addHologramUuid(UUID.fromString(uuidStr));
+                    }
+                }
+                if (arenaData.containsKey("pointHolograms")) {
+                    Map<String, List<String>> pointHologramsData = (Map<String, List<String>>) arenaData.get("pointHolograms");
+                    for (Map.Entry<String, List<String>> phEntry : pointHologramsData.entrySet()) {
+                        String key = phEntry.getKey();
+                        for (String uuidStr : phEntry.getValue()) {
+                            arena.addPointHologram(key, UUID.fromString(uuidStr));
+                        }
+                    }
+                }
+                if (arenaData.containsKey("fallY")) {
+                    arena.setFallY(((Number) arenaData.get("fallY")).intValue());
+                }
 
                 parkourManager.getArenas().put(name, arena);
+                }
             }
             plugin.getLogger().info("Loaded " + parkourManager.getArenas().size() + " arenas from JSON.");
         } catch (IOException e) {
@@ -71,8 +107,13 @@ public class DataManager {
     }
 
     public void saveArenas() {
-        Map<String, Map<String, Object>> data = new HashMap<>();
+        Map<String, Object> rootData = new HashMap<>();
+        
+        if (lobbyLocation != null) {
+            rootData.put("lobby", serializeLocation(lobbyLocation));
+        }
 
+        Map<String, Map<String, Object>> arenasData = new HashMap<>();
         for (ParkourArena arena : parkourManager.getArenas().values()) {
             Map<String, Object> arenaData = new HashMap<>();
             if (arena.getStartLocation() != null) {
@@ -87,13 +128,33 @@ public class DataManager {
             }
             arenaData.put("checkpoints", checkpoints);
             arenaData.put("icon", arena.getIcon().name());
+            
+            List<String> hologramUuids = new ArrayList<>();
+            for (UUID uuid : arena.getHologramUuids()) {
+                hologramUuids.add(uuid.toString());
+            }
+            arenaData.put("holograms", hologramUuids);
 
-            data.put(arena.getName(), arenaData);
+            Map<String, List<String>> pointHologramsData = new HashMap<>();
+            for (Map.Entry<String, List<UUID>> entry : arena.getPointHolograms().entrySet()) {
+                List<String> uuids = new ArrayList<>();
+                for (UUID uuid : entry.getValue()) {
+                    uuids.add(uuid.toString());
+                }
+                pointHologramsData.put(entry.getKey(), uuids);
+            }
+            arenaData.put("pointHolograms", pointHologramsData);
+            
+            if (arena.getFallY() != null) {
+                arenaData.put("fallY", arena.getFallY());
+            }
+
+            arenasData.put(arena.getName(), arenaData);
         }
+        rootData.put("arenas", arenasData);
 
         try (Writer writer = new FileWriter(arenasFile)) {
-            gson.toJson(data, writer);
-            plugin.getLogger().info("Saved " + parkourManager.getArenas().size() + " arenas to JSON.");
+            gson.toJson(rootData, writer);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -112,8 +173,13 @@ public class DataManager {
     }
 
     private Location deserializeLocation(Map<String, Object> map) {
-        World world = Bukkit.getWorld((String) map.get("world"));
+        if (map == null || !map.containsKey("world")) return null;
+        String worldName = (String) map.get("world");
+        if (worldName == null) return null;
+        
+        World world = Bukkit.getWorld(worldName);
         if (world == null) return null;
+        
         double x = ((Number) map.get("x")).doubleValue();
         double y = ((Number) map.get("y")).doubleValue();
         double z = ((Number) map.get("z")).doubleValue();

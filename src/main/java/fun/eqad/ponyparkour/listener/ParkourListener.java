@@ -4,13 +4,17 @@ import fun.eqad.ponyparkour.PonyParkour;
 import fun.eqad.ponyparkour.arena.ParkourArena;
 import fun.eqad.ponyparkour.arena.ParkourSession;
 import fun.eqad.ponyparkour.manager.ParkourManager;
-import org.bukkit.ChatColor;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 
@@ -38,6 +42,12 @@ public class ParkourListener implements Listener {
 
         String prefix = plugin.getConfigManager().getPrefix();
 
+        if (arena.getFallY() != null && to.getY() < arena.getFallY()) {
+            player.teleport(session.getLastCheckpointLocation());
+            player.sendMessage(prefix + "§c你掉下去了！已传送回最近的检查点。");
+            return;
+        }
+
         if (isSameBlock(to, arena.getEndLocation())) {
             long timeTaken = System.currentTimeMillis() - session.getStartTime();
             player.sendMessage(prefix + "§6跑酷完成！用时: " + (timeTaken / 1000.0) + "秒!");
@@ -46,13 +56,48 @@ public class ParkourListener implements Listener {
         }
 
         List<Location> checkpoints = arena.getCheckpoints();
-        int nextCheckpointIndex = session.getCurrentCheckpointIndex() + 1;
-
-        if (nextCheckpointIndex < checkpoints.size()) {
-            Location nextCheckpoint = checkpoints.get(nextCheckpointIndex);
-            if (isSameBlock(to, nextCheckpoint)) {
-                session.setCheckpoint(nextCheckpointIndex);
-                player.sendMessage(prefix + "§b到达检查点 " + (nextCheckpointIndex + 1) + " !");
+        
+        for (int i = 0; i < checkpoints.size(); i++) {
+            if (isSameBlock(to, checkpoints.get(i))) {
+                if (i > session.getCurrentCheckpointIndex()) {
+                    session.setCheckpoint(i);
+                    
+                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 2.0f);
+                    
+                    final int checkpointNum = i + 1;
+                    new BukkitRunnable() {
+                        int tick = 0;
+                        final int duration = 20;
+                        
+                        final int startR = 0x25;
+                        final int startG = 0x89;
+                        final int startB = 0xff;
+                        
+                        final int endR = 0x00;
+                        final int endG = 0x67;
+                        final int endB = 0xe0;
+                        
+                        @Override
+                        public void run() {
+                            if (tick >= duration) {
+                                this.cancel();
+                                return;
+                            }
+                            
+                            float ratio = (float) tick / (float) duration;
+                            int r = (int) (startR + (endR - startR) * ratio);
+                            int g = (int) (startG + (endG - startG) * ratio);
+                            int b = (int) (startB + (endB - startB) * ratio);
+                            
+                            ChatColor color = ChatColor.of(new java.awt.Color(r, g, b));
+                            String message = color + "§l到达检查点 " + checkpointNum + " !";
+                            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+                            
+                            tick++;
+                        }
+                    }.runTaskTimer(plugin, 0L, 1L);
+                }
+                break;
             }
         }
     }

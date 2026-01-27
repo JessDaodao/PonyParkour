@@ -4,14 +4,16 @@ import fun.eqad.ponyparkour.PonyParkour;
 import fun.eqad.ponyparkour.arena.ParkourArena;
 import fun.eqad.ponyparkour.manager.ParkourManager;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.Sign;
-import org.bukkit.block.data.type.WallSign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
@@ -59,21 +61,98 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 break;
             case "delete":
                 if (args.length < 2) {
-                    player.sendMessage(prefix + "§c用法: /parkour delete <名称>");
+                    player.sendMessage(prefix + "§c用法: /parkour delete <arena|checkpoint|start|end> [名称]");
                     return true;
                 }
-                parkourManager.deleteArena(args[1]);
-                player.sendMessage(prefix + "§a跑酷地图 " + args[1] + " 已删除");
+                String deleteType = args[1].toLowerCase();
+                
+                if (deleteType.equals("arena")) {
+                    if (args.length < 3) {
+                        player.sendMessage(prefix + "§c用法: /parkour delete arena <名称>");
+                        return true;
+                    }
+                    parkourManager.deleteArena(args[2]);
+                    player.sendMessage(prefix + "§a跑酷地图 " + args[2] + " 已删除");
+                    return true;
+                }
+
+                if (args.length < 3) {
+                    player.sendMessage(prefix + "§c用法: /parkour delete " + deleteType + " <名称>");
+                    return true;
+                }
+
+                String arenaNameDel = args[2];
+                ParkourArena arenaDel = parkourManager.getArena(arenaNameDel);
+                if (arenaDel == null) {
+                    player.sendMessage(prefix + "§c未找到该跑酷地图");
+                    return true;
+                }
+
+                switch (deleteType) {
+                    case "start":
+                        if (arenaDel.getStartLocation() != null) {
+                            arenaDel.getStartLocation().getBlock().setType(Material.AIR);
+                            arenaDel.setStartLocation(null);
+                            removeHolograms(arenaDel, "start");
+                            player.sendMessage(prefix + "§a已删除 " + arenaNameDel + " 的起点");
+                        } else {
+                            player.sendMessage(prefix + "§c该地图未设置起点");
+                        }
+                        break;
+                    case "end":
+                        if (arenaDel.getEndLocation() != null) {
+                            arenaDel.getEndLocation().getBlock().setType(Material.AIR);
+                            arenaDel.setEndLocation(null);
+                            removeHolograms(arenaDel, "end");
+                            player.sendMessage(prefix + "§a已删除 " + arenaNameDel + " 的终点");
+                        } else {
+                            player.sendMessage(prefix + "§c该地图未设置终点");
+                        }
+                        break;
+                    case "checkpoint":
+                        if (args.length < 4) {
+                            player.sendMessage(prefix + "§c用法: /parkour delete checkpoint <名称> <编号>");
+                            return true;
+                        }
+                        try {
+                            int index = Integer.parseInt(args[3]) - 1;
+                            if (index >= 0 && index < arenaDel.getCheckpoints().size()) {
+                                Location cpLoc = arenaDel.getCheckpoints().get(index);
+                                cpLoc.getBlock().setType(Material.AIR);
+                                arenaDel.getCheckpoints().remove(index);
+                                removeHolograms(arenaDel, "checkpoint_" + index);
+                                
+                                for (int i = index + 1; i <= arenaDel.getCheckpoints().size(); i++) {
+                                    List<java.util.UUID> uuids = arenaDel.removePointHolograms("checkpoint_" + i);
+                                    if (uuids != null) {
+                                        for (java.util.UUID uuid : uuids) {
+                                            arenaDel.addPointHologram("checkpoint_" + (i - 1), uuid);
+                                        }
+                                    }
+                                }
+                                
+                                player.sendMessage(prefix + "§a已删除 " + arenaNameDel + " 的检查点 " + (index + 1));
+                            } else {
+                                player.sendMessage(prefix + "§c无效的检查点编号");
+                            }
+                        } catch (NumberFormatException e) {
+                            player.sendMessage(prefix + "§c检查点编号必须是数字");
+                        }
+                        break;
+                    default:
+                        player.sendMessage(prefix + "§c用法: /parkour delete <arena|checkpoint|start|end> [名称]");
+                        break;
+                }
                 break;
             case "set":
                 if (args.length < 2) {
-                    player.sendMessage(prefix + "§c用法: /parkour set <lobby|start|end|checkpoint|icon> [名称]");
+                    player.sendMessage(prefix + "§c用法: /parkour set <lobby|start|end|checkpoint|icon|fall> [名称]");
                     return true;
                 }
                 String setType = args[1].toLowerCase();
 
                 if (setType.equals("lobby")) {
-                    plugin.getConfigManager().setLobbyLocation(player.getLocation());
+                    plugin.getDataManager().setLobbyLocation(player.getLocation());
                     player.sendMessage(prefix + "§a大厅位置已设置");
                     return true;
                 }
@@ -92,22 +171,59 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
                 switch (setType) {
                     case "start":
-                        arena.setStartLocation(player.getLocation());
-                        player.getLocation().getBlock().setType(Material.OAK_PRESSURE_PLATE);
-                        placeWallSign(player, "§a[起点]", arenaName);
+                        Location startLoc = player.getLocation().getBlock().getLocation().add(0.5, 0, 0.5);
+                        startLoc.setYaw(player.getLocation().getYaw());
+                        startLoc.setPitch(player.getLocation().getPitch());
+                        arena.setStartLocation(startLoc);
+                        startLoc.getBlock().setType(Material.OAK_PRESSURE_PLATE);
+                        spawnHologram(startLoc, "§a[起点]", arenaName, arena, "start");
                         player.sendMessage(prefix + "§a已设置 " + arenaName + " 的起点");
                         break;
                     case "end":
-                        arena.setEndLocation(player.getLocation());
-                        player.getLocation().getBlock().setType(Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
-                        placeWallSign(player, "§c[终点]", arenaName);
+                        Location endLoc = player.getLocation().getBlock().getLocation().add(0.5, 0, 0.5);
+                        endLoc.setYaw(player.getLocation().getYaw());
+                        endLoc.setPitch(player.getLocation().getPitch());
+                        arena.setEndLocation(endLoc);
+                        endLoc.getBlock().setType(Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
+                        spawnHologram(endLoc, "§c[终点]", arenaName, arena, "end");
                         player.sendMessage(prefix + "§a已设置 " + arenaName + " 的终点");
                         break;
                     case "checkpoint":
-                        arena.addCheckpoint(player.getLocation());
-                        player.getLocation().getBlock().setType(Material.STONE_PRESSURE_PLATE);
-                        placeWallSign(player, "§b[检查点]", String.valueOf(arena.getCheckpoints().size()));
-                        player.sendMessage(prefix + "§a已为 " + arenaName + " 添加检查点");
+                        int index = -1;
+                        if (args.length > 3) {
+                            try {
+                                index = Integer.parseInt(args[3]) - 1;
+                            } catch (NumberFormatException e) {
+                                player.sendMessage(prefix + "§c检查点编号必须是数字");
+                                return true;
+                            }
+                        }
+
+                        Location cpLoc = player.getLocation().getBlock().getLocation().add(0.5, 0, 0.5);
+                        cpLoc.setYaw(player.getLocation().getYaw());
+                        cpLoc.setPitch(player.getLocation().getPitch());
+
+                        if (index >= 0) {
+                            if (index < arena.getCheckpoints().size()) {
+                                arena.getCheckpoints().set(index, cpLoc);
+                                cpLoc.getBlock().setType(Material.STONE_PRESSURE_PLATE);
+                                spawnHologram(cpLoc, "§b[检查点]", String.valueOf(index + 1), arena, "checkpoint_" + index);
+                                player.sendMessage(prefix + "§a已更新 " + arenaName + " 的检查点 " + (index + 1));
+                            } else if (index == arena.getCheckpoints().size()) {
+                                arena.addCheckpoint(cpLoc);
+                                cpLoc.getBlock().setType(Material.STONE_PRESSURE_PLATE);
+                                spawnHologram(cpLoc, "§b[检查点]", String.valueOf(index + 1), arena, "checkpoint_" + index);
+                                player.sendMessage(prefix + "§a已为 " + arenaName + " 添加检查点 " + (index + 1));
+                            } else {
+                                player.sendMessage(prefix + "§c检查点编号不连续，当前最大编号: " + arena.getCheckpoints().size());
+                            }
+                        } else {
+                            int newIndex = arena.getCheckpoints().size();
+                            arena.addCheckpoint(cpLoc);
+                            cpLoc.getBlock().setType(Material.STONE_PRESSURE_PLATE);
+                            spawnHologram(cpLoc, "§b[检查点]", String.valueOf(newIndex + 1), arena, "checkpoint_" + newIndex);
+                            player.sendMessage(prefix + "§a已为 " + arenaName + " 添加检查点");
+                        }
                         break;
                     case "icon":
                         Material itemInHand = player.getInventory().getItemInMainHand().getType();
@@ -117,6 +233,21 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                         }
                         arena.setIcon(itemInHand);
                         player.sendMessage(prefix + "§a已设置 " + arenaName + " 的图标");
+                        break;
+                    case "fall":
+                        int fallY;
+                        if (args.length >= 4) {
+                            try {
+                                fallY = Integer.parseInt(args[3]);
+                            } catch (NumberFormatException e) {
+                                player.sendMessage(prefix + "§cY坐标必须是整数");
+                                return true;
+                            }
+                        } else {
+                            fallY = player.getLocation().getBlockY();
+                        }
+                        arena.setFallY(fallY);
+                        player.sendMessage(prefix + "§a已设置 " + arenaName + " 的掉落高度为 " + fallY);
                         break;
                     default:
                         player.sendMessage(prefix + "§c用法: /parkour set <lobby|start|end|checkpoint|icon> [名称]");
@@ -173,7 +304,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         if (aliases) {
             sender.sendMessage(" §7/pk create <名称> §8- §7创建跑酷地图");
             sender.sendMessage(" §7/pk delete <名称> §8- §7删除跑酷地图");
-            sender.sendMessage(" §7/pk set <start|end|checkpoint|icon|lobby> <名称> §8- §7设置地图属性");
+            sender.sendMessage(" §7/pk set <start|end|checkpoint|icon|lobby> <名称> §8- §7设置地图点位");
             sender.sendMessage(" §7/pk join <名称> §8- §7加入跑酷");
             sender.sendMessage(" §7/pk leave §8- §7离开跑酷");
             sender.sendMessage(" §7/pk gui §8- §7打开地图列表");
@@ -182,7 +313,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         } else {
             sender.sendMessage(" §7/parkour create <名称> §8- §7创建跑酷地图");
             sender.sendMessage(" §7/parkour delete <名称> §8- §7删除跑酷地图");
-            sender.sendMessage(" §7/parkour set <start|end|checkpoint|icon|lobby> <名称> §8- §7设置地图属性");
+            sender.sendMessage(" §7/parkour set <start|end|checkpoint|icon|lobby> <名称> §8- §7设置地图");
             sender.sendMessage(" §7/parkour join <名称> §8- §7加入跑酷");
             sender.sendMessage(" §7/parkour leave §8- §7离开跑酷");
             sender.sendMessage(" §7/parkour gui §8- §7打开地图列表");
@@ -215,14 +346,37 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             return commands;
         } else if (args.length == 2) {
             String subCommand = args[0].toLowerCase();
-            if (Arrays.asList("delete", "join").contains(subCommand)) {
+            if (subCommand.equals("join")) {
                 return StringUtil.copyPartialMatches(args[1], new ArrayList<>(parkourManager.getArenas().keySet()), new ArrayList<>());
+            } else if (subCommand.equals("delete")) {
+                return StringUtil.copyPartialMatches(args[1], Arrays.asList("arena", "checkpoint", "start", "end"), new ArrayList<>());
             } else if (subCommand.equals("set")) {
-                return StringUtil.copyPartialMatches(args[1], Arrays.asList("checkpoint", "start", "end", "lobby", "icon"), new ArrayList<>());
+                return StringUtil.copyPartialMatches(args[1], Arrays.asList("checkpoint", "start", "end", "lobby", "icon", "fall"), new ArrayList<>());
             }
         } else if (args.length == 3) {
-            if (args[0].equalsIgnoreCase("set")) {
+            if (args[0].equalsIgnoreCase("set") || args[0].equalsIgnoreCase("delete")) {
+                if (args[1].equalsIgnoreCase("lobby")) return completions;
                 return StringUtil.copyPartialMatches(args[2], new ArrayList<>(parkourManager.getArenas().keySet()), new ArrayList<>());
+            }
+        } else if (args.length == 4) {
+            if (args[0].equalsIgnoreCase("set") && args[1].equalsIgnoreCase("fall")) {
+                if (sender instanceof Player) {
+                    completions.add(String.valueOf(((Player) sender).getLocation().getBlockY()));
+                }
+                return completions;
+            }
+            if ((args[0].equalsIgnoreCase("set") || args[0].equalsIgnoreCase("delete")) && args[1].equalsIgnoreCase("checkpoint")) {
+                String arenaName = args[2];
+                ParkourArena arena = parkourManager.getArena(arenaName);
+                if (arena != null) {
+                    for (int i = 1; i <= arena.getCheckpoints().size(); i++) {
+                        completions.add(String.valueOf(i));
+                    }
+                    if (args[0].equalsIgnoreCase("set")) {
+                        completions.add(String.valueOf(arena.getCheckpoints().size() + 1));
+                    }
+                    return StringUtil.copyPartialMatches(args[3], completions, new ArrayList<>());
+                }
             }
         }
         
@@ -230,22 +384,41 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         return completions;
     }
 
-    private void placeWallSign(Player player, String line1, String line2) {
-        Block targetBlock = player.getLocation().getBlock().getRelative(player.getFacing().getOppositeFace());
-        if (targetBlock.getType() != Material.AIR) {
-            Block signBlock = player.getLocation().getBlock().getRelative(0, 1, 0).getRelative(player.getFacing().getOppositeFace());
-            signBlock.setType(Material.OAK_WALL_SIGN);
-            
-            if (signBlock.getState() instanceof Sign) {
-                Sign sign = (Sign) signBlock.getState();
-                if (sign.getBlockData() instanceof WallSign) {
-                    WallSign wallSign = (WallSign) sign.getBlockData();
-                    wallSign.setFacing(player.getFacing());
-                    sign.setBlockData(wallSign);
+    private void spawnHologram(Location location, String line1, String line2, ParkourArena arena, String key) {
+        removeHolograms(arena, key);
+
+        double x = location.getBlockX() + 0.5;
+        double y = location.getBlockY() + 1.5;
+        double z = location.getBlockZ() + 0.5;
+        Location holoLoc = new Location(location.getWorld(), x, y, z);
+        
+        ArmorStand as1 = (ArmorStand) location.getWorld().spawnEntity(holoLoc.clone().add(0, 0.3, 0), EntityType.ARMOR_STAND);
+        as1.setCustomName(line1);
+        as1.setCustomNameVisible(true);
+        as1.setGravity(false);
+        as1.setVisible(false);
+        as1.setMarker(true);
+        as1.setSmall(true);
+        arena.addPointHologram(key, as1.getUniqueId());
+
+        ArmorStand as2 = (ArmorStand) location.getWorld().spawnEntity(holoLoc, EntityType.ARMOR_STAND);
+        as2.setCustomName(line2);
+        as2.setCustomNameVisible(true);
+        as2.setGravity(false);
+        as2.setVisible(false);
+        as2.setMarker(true);
+        as2.setSmall(true);
+        arena.addPointHologram(key, as2.getUniqueId());
+    }
+
+    private void removeHolograms(ParkourArena arena, String key) {
+        List<java.util.UUID> uuids = arena.removePointHolograms(key);
+        if (uuids != null) {
+            for (java.util.UUID uuid : uuids) {
+                org.bukkit.entity.Entity entity = org.bukkit.Bukkit.getEntity(uuid);
+                if (entity != null) {
+                    entity.remove();
                 }
-                sign.setLine(0, line1);
-                sign.setLine(1, line2);
-                sign.update();
             }
         }
     }

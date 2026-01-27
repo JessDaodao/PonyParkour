@@ -31,13 +31,34 @@ public class GUIManager implements Listener {
 
     public void openMapSelector(Player player) {
         List<ParkourArena> arenas = new ArrayList<>(parkourManager.getArenas().values());
-        int size = (int) Math.ceil(arenas.size() / 9.0) * 9;
-        if (size == 0) size = 9;
-        if (size > 54) size = 54;
+        int size = 54;
 
         Inventory gui = Bukkit.createInventory(null, size, GUI_TITLE);
 
+        ItemStack borderItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        if (borderMeta != null) {
+            borderMeta.setDisplayName(" ");
+            borderItem.setItemMeta(borderMeta);
+        }
+
+        for (int i = 0; i < 9; i++) {
+            gui.setItem(i, borderItem);
+            gui.setItem(size - 9 + i, borderItem);
+        }
+
+        for (int i = 1; i < 5; i++) {
+            gui.setItem(i * 9, borderItem);
+            gui.setItem(i * 9 + 8, borderItem);
+        }
+
+        int index = 10;
         for (ParkourArena arena : arenas) {
+            while (index < size && (index % 9 == 0 || index % 9 == 8)) {
+                index++;
+            }
+            if (index >= size - 9) break;
+
             ItemStack item = new ItemStack(arena.getIcon());
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
@@ -47,7 +68,8 @@ public class GUIManager implements Listener {
                 meta.setLore(lore);
                 item.setItemMeta(meta);
             }
-            gui.addItem(item);
+            gui.setItem(index, item);
+            index++;
         }
 
         player.openInventory(gui);

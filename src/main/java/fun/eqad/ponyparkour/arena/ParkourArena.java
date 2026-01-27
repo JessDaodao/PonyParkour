@@ -12,11 +12,42 @@ public class ParkourArena {
     private Location endLocation;
     private List<Location> checkpoints;
     private Material icon;
+    private List<java.util.UUID> hologramUuids;
+    private java.util.Map<String, List<java.util.UUID>> pointHolograms;
+    private Integer fallY;
 
     public ParkourArena(String name) {
         this.name = name;
         this.checkpoints = new ArrayList<>();
         this.icon = Material.GRASS_BLOCK;
+        this.hologramUuids = new ArrayList<>();
+        this.pointHolograms = new java.util.HashMap<>();
+        this.fallY = null;
+    }
+
+    public List<java.util.UUID> getHologramUuids() {
+        return hologramUuids;
+    }
+
+    public void addHologramUuid(java.util.UUID uuid) {
+        this.hologramUuids.add(uuid);
+    }
+
+    public java.util.Map<String, List<java.util.UUID>> getPointHolograms() {
+        return pointHolograms;
+    }
+
+    public void addPointHologram(String key, java.util.UUID uuid) {
+        pointHolograms.computeIfAbsent(key, k -> new ArrayList<>()).add(uuid);
+        addHologramUuid(uuid);
+    }
+
+    public List<java.util.UUID> removePointHolograms(String key) {
+        List<java.util.UUID> uuids = pointHolograms.remove(key);
+        if (uuids != null) {
+            hologramUuids.removeAll(uuids);
+        }
+        return uuids;
     }
 
     public String getName() {
@@ -53,5 +84,13 @@ public class ParkourArena {
 
     public void setIcon(Material icon) {
         this.icon = icon;
+    }
+
+    public Integer getFallY() {
+        return fallY;
+    }
+
+    public void setFallY(Integer fallY) {
+        this.fallY = fallY;
     }
 }

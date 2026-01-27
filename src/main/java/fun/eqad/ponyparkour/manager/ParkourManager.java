@@ -2,7 +2,9 @@ package fun.eqad.ponyparkour.manager;
 
 import fun.eqad.ponyparkour.arena.ParkourArena;
 import fun.eqad.ponyparkour.arena.ParkourSession;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -25,6 +27,15 @@ public class ParkourManager {
     }
 
     public void deleteArena(String name) {
+        ParkourArena arena = arenas.get(name);
+        if (arena != null) {
+            for (UUID uuid : arena.getHologramUuids()) {
+                Entity entity = Bukkit.getEntity(uuid);
+                if (entity != null) {
+                    entity.remove();
+                }
+            }
+        }
         arenas.remove(name);
     }
 
@@ -50,7 +61,7 @@ public class ParkourManager {
         if (sessions.containsKey(player.getUniqueId())) {
             sessions.remove(player.getUniqueId());
             
-            Location lobby = fun.eqad.ponyparkour.PonyParkour.getInstance().getConfigManager().getLobbyLocation();
+            Location lobby = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getLobbyLocation();
             if (lobby != null) {
                 player.teleport(lobby);
             }
