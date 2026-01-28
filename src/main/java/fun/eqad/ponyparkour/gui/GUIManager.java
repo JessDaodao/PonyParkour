@@ -2,6 +2,7 @@ package fun.eqad.ponyparkour.gui;
 
 import fun.eqad.ponyparkour.PonyParkour;
 import fun.eqad.ponyparkour.arena.ParkourArena;
+import fun.eqad.ponyparkour.arena.ParkourSession;
 import fun.eqad.ponyparkour.manager.ParkourManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -67,6 +68,20 @@ public class GUIManager implements Listener {
                 meta.setDisplayName(ChatColor.GREEN + arena.getName());
                 List<String> lore = new ArrayList<>();
                 lore.add(ChatColor.GRAY + "制作人员: " + ChatColor.YELLOW + arena.getAuthor());
+                
+                long playingCount = parkourManager.getActiveSessions().stream()
+                        .filter(s -> s.getArena().getName().equals(arena.getName()))
+                        .count();
+                lore.add(ChatColor.GRAY + "正在游玩: " + ChatColor.AQUA + playingCount);
+                
+                java.util.Map<java.util.UUID, Double> records = plugin.getDataManager().getArenaRecords(arena.getName());
+                Double personalBest = records.get(player.getUniqueId());
+                if (personalBest != null) {
+                    lore.add(ChatColor.GRAY + "你的最佳记录: " + ChatColor.GOLD + personalBest + "秒");
+                } else {
+                    lore.add(ChatColor.GRAY + "你的最佳记录: " + ChatColor.RED + "暂无");
+                }
+                
                 lore.add("");
                 lore.add(ChatColor.GRAY + "点击查看详情");
                 meta.setLore(lore);

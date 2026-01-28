@@ -96,7 +96,7 @@ public class ParkourListener implements Listener {
             plugin.getDataManager().saveRecord(arena.getName(), player.getUniqueId(), timeSeconds);
 
             player.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 60, 0, false, false));
-            player.sendTitle("§a" + arena.getName(), "§e用时: " + timeSeconds + "秒", 10, 40, 10);
+            player.sendTitle("§a已完成", "§e用时: " + timeSeconds + "秒", 10, 40, 10);
 
             new BukkitRunnable() {
                 @Override
