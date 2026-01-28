@@ -37,6 +37,22 @@ public class ParkourSession {
         }
     }
 
+    public void setSavedInventory(ItemStack[] inventory) {
+        this.savedInventory = inventory;
+    }
+
+    public void setSavedArmor(ItemStack[] armor) {
+        this.savedArmor = armor;
+    }
+
+    public ItemStack[] getSavedInventory() {
+        return savedInventory;
+    }
+
+    public ItemStack[] getSavedArmor() {
+        return savedArmor;
+    }
+
     public boolean arePlayersHidden() {
         return playersHidden;
     }

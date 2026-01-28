@@ -139,11 +139,6 @@ public class ParkourListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        parkourManager.endSession(event.getPlayer());
-    }
-
-    @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player) {
             Player player = (Player) event.getEntity();
@@ -221,20 +216,54 @@ public class ParkourListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-        if (parkourManager.isPlaying(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        parkourManager.pauseSession(event.getPlayer());
     }
 
     @EventHandler
     public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent event) {
         Player joinedPlayer = event.getPlayer();
-        for (ParkourSession session : parkourManager.getActiveSessions()) {
-            if (session.arePlayersHidden()) {
-                session.getPlayer().hidePlayer(plugin, joinedPlayer);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!joinedPlayer.isOnline()) return;
+
+                String savedArena = plugin.getDataManager().getSavedSession(joinedPlayer.getUniqueId());
+                boolean pendingTeleport = plugin.getDataManager().isPendingLobbyTeleport(joinedPlayer.getUniqueId());
+                
+                if (savedArena != null || pendingTeleport) {
+                    ItemStack[] savedInv = plugin.getDataManager().getSavedInventory(joinedPlayer.getUniqueId());
+                    ItemStack[] savedArmor = plugin.getDataManager().getSavedArmor(joinedPlayer.getUniqueId());
+                    
+                    if (savedInv != null) {
+                        joinedPlayer.getInventory().setContents(savedInv);
+                    }
+                    if (savedArmor != null) {
+                        joinedPlayer.getInventory().setArmorContents(savedArmor);
+                    }
+                    
+                    Location lobby = plugin.getDataManager().getLobbyLocation();
+                    if (lobby != null) {
+                        joinedPlayer.teleport(lobby);
+                    }
+                    
+                    if (savedArena != null) {
+                        plugin.getDataManager().removeSavedSession(joinedPlayer.getUniqueId());
+                    }
+                    
+                    if (pendingTeleport) {
+                        plugin.getDataManager().setPendingLobbyTeleport(joinedPlayer.getUniqueId(), false);
+                    }
+                }
+
+                for (ParkourSession session : parkourManager.getActiveSessions()) {
+                    if (session.arePlayersHidden()) {
+                        session.getPlayer().hidePlayer(plugin, joinedPlayer);
+                    }
+                }
             }
-        }
+        }.runTaskLater(plugin, 20L);
     }
 
     private boolean isSameBlock(Location loc1, Location loc2) {

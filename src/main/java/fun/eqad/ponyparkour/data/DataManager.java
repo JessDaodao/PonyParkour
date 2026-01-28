@@ -10,6 +10,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.io.BukkitObjectInputStream;
+import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -28,6 +32,10 @@ public class DataManager {
     private Location lobbyLocation;
     private final Map<String, Map<String, Object>> brokenArenas = new HashMap<>();
     private final Map<UUID, Boolean> playerVisibilityPrefs = new HashMap<>();
+    private final Map<UUID, String> savedSessions = new HashMap<>();
+    private final Map<UUID, String> savedInventories = new HashMap<>();
+    private final Map<UUID, String> savedArmors = new HashMap<>();
+    private final Map<UUID, Boolean> pendingLobbyTeleport = new HashMap<>();
 
     public DataManager(PonyParkour plugin) {
         this.plugin = plugin;
@@ -63,6 +71,34 @@ public class DataManager {
                 Map<String, Boolean> visibilityData = (Map<String, Boolean>) rootData.get("playerVisibility");
                 for (Map.Entry<String, Boolean> entry : visibilityData.entrySet()) {
                     playerVisibilityPrefs.put(UUID.fromString(entry.getKey()), entry.getValue());
+                }
+            }
+
+            if (rootData.containsKey("savedSessions")) {
+                Map<String, String> sessionsData = (Map<String, String>) rootData.get("savedSessions");
+                for (Map.Entry<String, String> entry : sessionsData.entrySet()) {
+                    savedSessions.put(UUID.fromString(entry.getKey()), entry.getValue());
+                }
+            }
+
+            if (rootData.containsKey("savedInventories")) {
+                Map<String, String> invData = (Map<String, String>) rootData.get("savedInventories");
+                for (Map.Entry<String, String> entry : invData.entrySet()) {
+                    savedInventories.put(UUID.fromString(entry.getKey()), entry.getValue());
+                }
+            }
+
+            if (rootData.containsKey("savedArmors")) {
+                Map<String, String> armorData = (Map<String, String>) rootData.get("savedArmors");
+                for (Map.Entry<String, String> entry : armorData.entrySet()) {
+                    savedArmors.put(UUID.fromString(entry.getKey()), entry.getValue());
+                }
+            }
+
+            if (rootData.containsKey("pendingLobbyTeleport")) {
+                List<String> pending = (List<String>) rootData.get("pendingLobbyTeleport");
+                for (String uuidStr : pending) {
+                    pendingLobbyTeleport.put(UUID.fromString(uuidStr), true);
                 }
             }
 
@@ -139,6 +175,30 @@ public class DataManager {
             visibilityData.put(entry.getKey().toString(), entry.getValue());
         }
         rootData.put("playerVisibility", visibilityData);
+
+        Map<String, String> sessionsData = new HashMap<>();
+        for (Map.Entry<UUID, String> entry : savedSessions.entrySet()) {
+            sessionsData.put(entry.getKey().toString(), entry.getValue());
+        }
+        rootData.put("savedSessions", sessionsData);
+
+        Map<String, String> invData = new HashMap<>();
+        for (Map.Entry<UUID, String> entry : savedInventories.entrySet()) {
+            invData.put(entry.getKey().toString(), entry.getValue());
+        }
+        rootData.put("savedInventories", invData);
+
+        Map<String, String> armorData = new HashMap<>();
+        for (Map.Entry<UUID, String> entry : savedArmors.entrySet()) {
+            armorData.put(entry.getKey().toString(), entry.getValue());
+        }
+        rootData.put("savedArmors", armorData);
+
+        List<String> pendingTeleport = new ArrayList<>();
+        for (UUID uuid : pendingLobbyTeleport.keySet()) {
+            pendingTeleport.add(uuid.toString());
+        }
+        rootData.put("pendingLobbyTeleport", pendingTeleport);
 
         Map<String, Map<String, Object>> arenasData = new HashMap<>(brokenArenas);
         for (ParkourArena arena : parkourManager.getArenas().values()) {
@@ -229,5 +289,99 @@ public class DataManager {
     public void setPlayerVisibility(UUID uuid, boolean hidden) {
         playerVisibilityPrefs.put(uuid, hidden);
         saveArenas();
+    }
+
+    public void savePlayerSession(UUID uuid, String arenaName) {
+        savedSessions.put(uuid, arenaName);
+        saveArenas();
+    }
+
+    public String getSavedSession(UUID uuid) {
+        return savedSessions.get(uuid);
+    }
+
+    public void removeSavedSession(UUID uuid) {
+        savedSessions.remove(uuid);
+        savedInventories.remove(uuid);
+        savedArmors.remove(uuid);
+        saveArenas();
+    }
+
+    public void savePlayerInventory(UUID uuid, ItemStack[] inventory, ItemStack[] armor) {
+        try {
+            savedInventories.put(uuid, itemStackArrayToBase64(inventory));
+            savedArmors.put(uuid, itemStackArrayToBase64(armor));
+            saveArenas();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public ItemStack[] getSavedInventory(UUID uuid) {
+        if (!savedInventories.containsKey(uuid)) return null;
+        try {
+            return itemStackArrayFromBase64(savedInventories.get(uuid));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public ItemStack[] getSavedArmor(UUID uuid) {
+        if (!savedArmors.containsKey(uuid)) return null;
+        try {
+            return itemStackArrayFromBase64(savedArmors.get(uuid));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void setPendingLobbyTeleport(UUID uuid, boolean pending) {
+        if (pending) {
+            pendingLobbyTeleport.put(uuid, true);
+        } else {
+            pendingLobbyTeleport.remove(uuid);
+        }
+        saveArenas();
+    }
+
+    public boolean isPendingLobbyTeleport(UUID uuid) {
+        return pendingLobbyTeleport.containsKey(uuid);
+    }
+
+    private String itemStackArrayToBase64(ItemStack[] items) throws IllegalStateException, IOException {
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
+            
+            dataOutput.writeInt(items.length);
+            
+            for (int i = 0; i < items.length; i++) {
+                dataOutput.writeObject(items[i]);
+            }
+            
+            dataOutput.close();
+            return Base64Coder.encodeLines(outputStream.toByteArray());
+        } catch (Exception e) {
+            throw new IOException("Unable to save item stacks.", e);
+        }
+    }
+
+    private ItemStack[] itemStackArrayFromBase64(String data) throws IOException {
+        try {
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
+            BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
+            ItemStack[] items = new ItemStack[dataInput.readInt()];
+    
+            for (int i = 0; i < items.length; i++) {
+                items[i] = (ItemStack) dataInput.readObject();
+            }
+    
+            dataInput.close();
+            return items;
+        } catch (ClassNotFoundException e) {
+            throw new IOException("Unable to decode class type.", e);
+        }
     }
 }

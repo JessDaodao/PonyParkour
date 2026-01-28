@@ -70,6 +70,9 @@ public class ParkourManager {
         
         sessions.put(player.getUniqueId(), session);
         
+        fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerSession(player.getUniqueId(), arena.getName());
+        fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerInventory(player.getUniqueId(), session.getSavedInventory(), session.getSavedArmor());
+        
         player.getInventory().clear();
         giveParkourItems(player);
         
@@ -98,25 +101,49 @@ public class ParkourManager {
         player.sendTitle("§a" + arena.getName(), "§7制作人员: " + arena.getAuthor(), 10, 70, 20);
     }
 
+    public void pauseSession(Player player) {
+        if (sessions.containsKey(player.getUniqueId())) {
+            ParkourSession session = sessions.get(player.getUniqueId());
+            session.restoreInventory();
+            sessions.remove(player.getUniqueId());
+
+            if (player.isOnline()) {
+                player.removePotionEffect(PotionEffectType.SLOW);
+                player.removePotionEffect(PotionEffectType.JUMP);
+                player.removePotionEffect(PotionEffectType.SLOW_FALLING);
+                player.setWalkSpeed(0.2f);
+                player.setCollidable(true);
+                
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    player.showPlayer(fun.eqad.ponyparkour.PonyParkour.getInstance(), p);
+                }
+            }
+        }
+    }
+
     public void endSession(Player player) {
         if (sessions.containsKey(player.getUniqueId())) {
             ParkourSession session = sessions.get(player.getUniqueId());
             session.restoreInventory();
             sessions.remove(player.getUniqueId());
 
-            Location lobby = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getLobbyLocation();
-            if (lobby != null) {
-                player.teleport(lobby);
+            if (player.isOnline()) {
+                Location lobby = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getLobbyLocation();
+                if (lobby != null) {
+                    player.teleport(lobby);
+                }
+                player.removePotionEffect(PotionEffectType.SLOW);
+                player.removePotionEffect(PotionEffectType.JUMP);
+                player.removePotionEffect(PotionEffectType.SLOW_FALLING);
+                player.setWalkSpeed(0.2f);
+                player.setCollidable(true);
+                
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    player.showPlayer(fun.eqad.ponyparkour.PonyParkour.getInstance(), p);
+                }
             }
-            player.removePotionEffect(PotionEffectType.SLOW);
-            player.removePotionEffect(PotionEffectType.JUMP);
-            player.removePotionEffect(PotionEffectType.SLOW_FALLING);
-            player.setWalkSpeed(0.2f);
-            player.setCollidable(true);
             
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                player.showPlayer(fun.eqad.ponyparkour.PonyParkour.getInstance(), p);
-            }
+            fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().removeSavedSession(player.getUniqueId());
         }
     }
 
