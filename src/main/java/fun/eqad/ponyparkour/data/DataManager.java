@@ -36,6 +36,7 @@ public class DataManager {
     private final Map<UUID, String> savedInventories = new HashMap<>();
     private final Map<UUID, String> savedArmors = new HashMap<>();
     private final Map<UUID, Boolean> pendingLobbyTeleport = new HashMap<>();
+    private final Map<String, Map<UUID, Double>> arenaRecords = new HashMap<>();
 
     public DataManager(PonyParkour plugin) {
         this.plugin = plugin;
@@ -99,6 +100,17 @@ public class DataManager {
                 List<String> pending = (List<String>) rootData.get("pendingLobbyTeleport");
                 for (String uuidStr : pending) {
                     pendingLobbyTeleport.put(UUID.fromString(uuidStr), true);
+                }
+            }
+
+            if (rootData.containsKey("arenaRecords")) {
+                Map<String, Map<String, Double>> recordsData = (Map<String, Map<String, Double>>) rootData.get("arenaRecords");
+                for (Map.Entry<String, Map<String, Double>> entry : recordsData.entrySet()) {
+                    Map<UUID, Double> records = new HashMap<>();
+                    for (Map.Entry<String, Double> recordEntry : entry.getValue().entrySet()) {
+                        records.put(UUID.fromString(recordEntry.getKey()), recordEntry.getValue());
+                    }
+                    arenaRecords.put(entry.getKey(), records);
                 }
             }
 
@@ -199,6 +211,16 @@ public class DataManager {
             pendingTeleport.add(uuid.toString());
         }
         rootData.put("pendingLobbyTeleport", pendingTeleport);
+
+        Map<String, Map<String, Double>> recordsData = new HashMap<>();
+        for (Map.Entry<String, Map<UUID, Double>> entry : arenaRecords.entrySet()) {
+            Map<String, Double> records = new HashMap<>();
+            for (Map.Entry<UUID, Double> recordEntry : entry.getValue().entrySet()) {
+                records.put(recordEntry.getKey().toString(), recordEntry.getValue());
+            }
+            recordsData.put(entry.getKey(), records);
+        }
+        rootData.put("arenaRecords", recordsData);
 
         Map<String, Map<String, Object>> arenasData = new HashMap<>(brokenArenas);
         for (ParkourArena arena : parkourManager.getArenas().values()) {
@@ -348,6 +370,19 @@ public class DataManager {
 
     public boolean isPendingLobbyTeleport(UUID uuid) {
         return pendingLobbyTeleport.containsKey(uuid);
+    }
+
+    public void saveRecord(String arenaName, UUID uuid, double time) {
+        arenaRecords.computeIfAbsent(arenaName, k -> new HashMap<>());
+        Map<UUID, Double> records = arenaRecords.get(arenaName);
+        if (!records.containsKey(uuid) || records.get(uuid) > time) {
+            records.put(uuid, time);
+            saveArenas();
+        }
+    }
+
+    public Map<UUID, Double> getArenaRecords(String arenaName) {
+        return arenaRecords.getOrDefault(arenaName, new HashMap<>());
     }
 
     private String itemStackArrayToBase64(ItemStack[] items) throws IllegalStateException, IOException {
