@@ -32,6 +32,7 @@ public class BlockEvent implements Listener {
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         if (!parkourManager.isPlaying(player)) return;
+        if (!plugin.getConfigManager().shouldSpecialBlock()) return;
         
         Location to = event.getTo();
         if (to == null) return;

@@ -41,7 +41,6 @@ public class GhostBlockManager implements Listener {
     }
 
     private void scanChunk(Chunk chunk) {
-        
         int minY = chunk.getWorld().getMinHeight();
         int maxY = chunk.getWorld().getMaxHeight();
 
@@ -72,6 +71,8 @@ public class GhostBlockManager implements Listener {
     }
 
     public void addGhostBlock(Location loc) {
+        if (!plugin.getConfigManager().shouldSpecialBlock()) return;
+
         ghostBlocks.add(loc);
     }
 

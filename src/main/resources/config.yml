@@ -3,3 +3,8 @@
 messages:
   # 插件消息前缀
   prefix: "&8[&bPonyParkour&8]&r "
+
+settings:
+  block:
+    # 是否启用跑酷特殊方块
+    enable: true
