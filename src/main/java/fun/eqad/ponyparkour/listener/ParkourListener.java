@@ -26,6 +26,8 @@ import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
 
@@ -84,9 +86,22 @@ public class ParkourListener implements Listener {
         }
 
         if (isSameBlock(to, arena.getEndLocation())) {
+            if (session.isFinished()) return;
+            session.setFinished(true);
+
             long timeTaken = System.currentTimeMillis() - session.getStartTime();
-            player.sendMessage(prefix + "§6跑酷完成！用时: " + (timeTaken / 1000.0) + "秒!");
-            parkourManager.endSession(player);
+            double timeSeconds = timeTaken / 1000.0;
+            player.sendMessage(prefix + "§6跑酷完成！用时: " + timeSeconds + "秒!");
+
+            player.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 60, 0, false, false));
+            player.sendTitle("§a" + arena.getName(), "§e用时: " + timeSeconds + "秒", 10, 40, 10);
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    parkourManager.endSession(player);
+                }
+            }.runTaskLater(plugin, 60L);
             return;
         }
 
@@ -232,6 +247,30 @@ public class ParkourListener implements Listener {
                 }
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getWhoClicked() instanceof Player) {
+            Player player = (Player) event.getWhoClicked();
+            if (parkourManager.isPlaying(player)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+        if (parkourManager.isPlaying(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerSwapHandItems(org.bukkit.event.player.PlayerSwapHandItemsEvent event) {
+        if (parkourManager.isPlaying(event.getPlayer())) {
+            event.setCancelled(true);
         }
     }
 

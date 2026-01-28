@@ -111,6 +111,7 @@ public class ParkourManager {
                 player.removePotionEffect(PotionEffectType.SLOW);
                 player.removePotionEffect(PotionEffectType.JUMP);
                 player.removePotionEffect(PotionEffectType.SLOW_FALLING);
+                player.removePotionEffect(PotionEffectType.LEVITATION);
                 player.setWalkSpeed(0.2f);
                 player.setCollidable(true);
                 
@@ -135,6 +136,7 @@ public class ParkourManager {
                 player.removePotionEffect(PotionEffectType.SLOW);
                 player.removePotionEffect(PotionEffectType.JUMP);
                 player.removePotionEffect(PotionEffectType.SLOW_FALLING);
+                player.removePotionEffect(PotionEffectType.LEVITATION);
                 player.setWalkSpeed(0.2f);
                 player.setCollidable(true);
                 

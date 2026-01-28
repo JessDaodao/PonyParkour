@@ -13,6 +13,7 @@ public class ParkourSession {
     private ItemStack[] savedInventory;
     private ItemStack[] savedArmor;
     private boolean playersHidden;
+    private boolean finished;
 
     public ParkourSession(Player player, ParkourArena arena) {
         this.player = player;
@@ -21,6 +22,7 @@ public class ParkourSession {
         this.startTime = System.currentTimeMillis();
         this.isFalling = true;
         this.playersHidden = false;
+        this.finished = false;
     }
 
     public void saveInventory() {
@@ -91,6 +93,14 @@ public class ParkourSession {
 
     public void setCheckpoint(int index) {
         this.currentCheckpointIndex = index;
+    }
+
+    public boolean isFinished() {
+        return finished;
+    }
+
+    public void setFinished(boolean finished) {
+        this.finished = finished;
     }
 
     public long getStartTime() {
