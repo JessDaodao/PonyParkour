@@ -3,7 +3,13 @@ package fun.eqad.ponyparkour.papi;
 import fun.eqad.ponyparkour.PonyParkour;
 import fun.eqad.ponyparkour.arena.ParkourSession;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class ExpansionManager extends PlaceholderExpansion {
 
@@ -61,6 +67,45 @@ public class ExpansionManager extends PlaceholderExpansion {
                 return session.getArena().getName();
             }
             return "None";
+        }
+
+        // %ponyparkour_rank_<arena>_<rank>_[type]%
+        if (params.startsWith("rank_")) {
+            String[] parts = params.split("_");
+            if (parts.length >= 3) {
+                String arenaName = parts[1];
+                try {
+                    int rank = Integer.parseInt(parts[2]);
+                    String type = "full";
+                    if (parts.length >= 4) {
+                        type = parts[3];
+                    }
+
+                    if (rank < 1) return "非法参数";
+
+                    Map<UUID, Double> records = plugin.getDataManager().getArenaRecords(arenaName);
+                    if (records.isEmpty()) return "暂无数据";
+
+                    List<Map.Entry<UUID, Double>> sortedRecords = new ArrayList<>(records.entrySet());
+                    sortedRecords.sort(Map.Entry.comparingByValue());
+
+                    if (rank > sortedRecords.size()) return "暂无数据";
+
+                    Map.Entry<UUID, Double> entry = sortedRecords.get(rank - 1);
+                    String playerName = Bukkit.getOfflinePlayer(entry.getKey()).getName();
+                    if (playerName == null) playerName = "未知玩家";
+                    
+                    if (type.equalsIgnoreCase("name")) {
+                        return playerName;
+                    } else if (type.equalsIgnoreCase("time")) {
+                        return entry.getValue() + "秒";
+                    } else {
+                        return playerName + " - " + entry.getValue() + "秒";
+                    }
+                } catch (NumberFormatException e) {
+                    return "非法参数";
+                }
+            }
         }
 
         return null;
