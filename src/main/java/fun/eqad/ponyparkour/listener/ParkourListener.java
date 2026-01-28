@@ -211,6 +211,26 @@ public class ParkourListener implements Listener {
                 }
                 item.setItemMeta(meta);
                 event.setCancelled(true);
+            } else if (event.getItem().getType() == Material.RED_BED) {
+                ParkourSession session = parkourManager.getSession(player);
+                Location lastCheckpoint = session.getLastCheckpointLocation();
+                
+                if (lastCheckpoint == null) {
+                    lastCheckpoint = session.getArena().getStartLocation();
+                }
+
+                if (lastCheckpoint != null) {
+                    player.teleport(lastCheckpoint);
+                    if (session.getCurrentCheckpointIndex() == -1) {
+                        player.sendMessage(plugin.getConfigManager().getPrefix() + "§a已回到上一个检查点");
+                    } else {
+                        player.sendMessage(plugin.getConfigManager().getPrefix() + "§a已回到上一个检查点");
+                    }
+                    player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                } else {
+                    player.sendMessage(plugin.getConfigManager().getPrefix() + "§c无法找到传送点");
+                }
+                event.setCancelled(true);
             }
         }
     }

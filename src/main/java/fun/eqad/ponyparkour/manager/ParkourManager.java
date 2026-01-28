@@ -164,9 +164,15 @@ public class ParkourManager {
         }
         
         hideItem.setItemMeta(hideMeta);
+
+        ItemStack checkpointItem = new ItemStack(Material.RED_BED);
+        ItemMeta checkpointMeta = checkpointItem.getItemMeta();
+        checkpointMeta.setDisplayName("§a回到上一个检查点");
+        checkpointItem.setItemMeta(checkpointMeta);
         
+        player.getInventory().setItem(3, checkpointItem);
+        player.getInventory().setItem(4, hideItem);
         player.getInventory().setItem(5, leaveItem);
-        player.getInventory().setItem(3, hideItem);
     }
 
     public ParkourSession getSession(Player player) {
