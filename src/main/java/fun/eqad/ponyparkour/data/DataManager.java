@@ -103,7 +103,7 @@ public class DataManager {
                 parkourManager.getArenas().put(name, arena);
                 }
             }
-            plugin.getLogger().info("Loaded " + parkourManager.getArenas().size() + " arenas from JSON.");
+            plugin.getLogger().info("已加载 " + parkourManager.getArenas().size() + " 个地图");
         } catch (IOException e) {
             e.printStackTrace();
         }
