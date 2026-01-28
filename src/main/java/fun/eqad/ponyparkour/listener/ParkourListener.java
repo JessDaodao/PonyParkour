@@ -114,13 +114,28 @@ public class ParkourListener implements Listener {
                 if (i > session.getCurrentCheckpointIndex()) {
                     session.setCheckpoint(i);
                     
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 2.0f);
+                    new BukkitRunnable() {
+                        int count = 0;
+                        @Override
+                        public void run() {
+                            if (count >= 3) {
+                                this.cancel();
+                                return;
+                            }
+                            float pitch = 1f + (count * 0.5f);
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, pitch);
+                            count++;
+                        }
+                    }.runTaskTimer(plugin, 0L, 4L);
                     
                     final int checkpointNum = i + 1;
                     final int totalCheckpoints = checkpoints.size();
+                    final String fullMessage = "检查点 (" + checkpointNum + "/" + totalCheckpoints + ")";
+                    
                     new BukkitRunnable() {
                         int tick = 0;
                         final int duration = 20;
+                        final int typeDuration = 10;
                         
                         final int startR = 0x25;
                         final int startG = 0x89;
@@ -143,7 +158,15 @@ public class ParkourListener implements Listener {
                             int b = (int) (startB + (endB - startB) * ratio);
                             
                             ChatColor color = ChatColor.of(new java.awt.Color(r, g, b));
-                            String message = color + "检查点 (" + checkpointNum + "/" + totalCheckpoints + ")";
+                            
+                            int charCount = fullMessage.length();
+                            if (tick < typeDuration) {
+                                charCount = (int) ((float) tick / typeDuration * fullMessage.length()) + 1;
+                                if (charCount > fullMessage.length()) charCount = fullMessage.length();
+                            }
+                            
+                            String currentMessage = fullMessage.substring(0, charCount);
+                            String message = color + currentMessage;
                             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
                             
                             tick++;
