@@ -2,6 +2,7 @@ package fun.eqad.ponyparkour.arena;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class ParkourSession {
     private final Player player;
@@ -9,6 +10,9 @@ public class ParkourSession {
     private int currentCheckpointIndex;
     private long startTime;
     private boolean isFalling;
+    private ItemStack[] savedInventory;
+    private ItemStack[] savedArmor;
+    private boolean playersHidden;
 
     public ParkourSession(Player player, ParkourArena arena) {
         this.player = player;
@@ -16,6 +20,29 @@ public class ParkourSession {
         this.currentCheckpointIndex = -1;
         this.startTime = System.currentTimeMillis();
         this.isFalling = true;
+        this.playersHidden = false;
+    }
+
+    public void saveInventory() {
+        this.savedInventory = player.getInventory().getContents();
+        this.savedArmor = player.getInventory().getArmorContents();
+    }
+
+    public void restoreInventory() {
+        if (savedInventory != null) {
+            player.getInventory().setContents(savedInventory);
+        }
+        if (savedArmor != null) {
+            player.getInventory().setArmorContents(savedArmor);
+        }
+    }
+
+    public boolean arePlayersHidden() {
+        return playersHidden;
+    }
+
+    public void setPlayersHidden(boolean hidden) {
+        this.playersHidden = hidden;
     }
 
     public boolean isFalling() {

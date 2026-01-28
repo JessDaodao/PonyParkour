@@ -26,6 +26,8 @@ public class DataManager {
     private final File arenasFile;
     private final Gson gson;
     private Location lobbyLocation;
+    private final Map<String, Map<String, Object>> brokenArenas = new HashMap<>();
+    private final Map<UUID, Boolean> playerVisibilityPrefs = new HashMap<>();
 
     public DataManager(PonyParkour plugin) {
         this.plugin = plugin;
@@ -45,6 +47,7 @@ public class DataManager {
 
     public void loadArenas() {
         if (!arenasFile.exists()) return;
+        brokenArenas.clear();
 
         try (Reader reader = new FileReader(arenasFile)) {
             Type type = new TypeToken<Map<String, Object>>(){}.getType();
@@ -56,54 +59,69 @@ public class DataManager {
                 this.lobbyLocation = deserializeLocation((Map<String, Object>) rootData.get("lobby"));
             }
 
+            if (rootData.containsKey("playerVisibility")) {
+                Map<String, Boolean> visibilityData = (Map<String, Boolean>) rootData.get("playerVisibility");
+                for (Map.Entry<String, Boolean> entry : visibilityData.entrySet()) {
+                    playerVisibilityPrefs.put(UUID.fromString(entry.getKey()), entry.getValue());
+                }
+            }
+
             if (rootData.containsKey("arenas")) {
                 Map<String, Map<String, Object>> arenasData = (Map<String, Map<String, Object>>) rootData.get("arenas");
                 for (Map.Entry<String, Map<String, Object>> entry : arenasData.entrySet()) {
                     String name = entry.getKey();
                     Map<String, Object> arenaData = entry.getValue();
-                ParkourArena arena = new ParkourArena(name);
+                    
+                    try {
+                        ParkourArena arena = new ParkourArena(name);
 
-                if (arenaData.containsKey("start")) {
-                    arena.setStartLocation(deserializeLocation((Map<String, Object>) arenaData.get("start")));
-                }
-                if (arenaData.containsKey("end")) {
-                    arena.setEndLocation(deserializeLocation((Map<String, Object>) arenaData.get("end")));
-                }
-                if (arenaData.containsKey("checkpoints")) {
-                    List<Map<String, Object>> checkpointsData = (List<Map<String, Object>>) arenaData.get("checkpoints");
-                    for (Map<String, Object> locData : checkpointsData) {
-                        arena.addCheckpoint(deserializeLocation(locData));
-                    }
-                }
-                if (arenaData.containsKey("icon")) {
-                    arena.setIcon(Material.valueOf((String) arenaData.get("icon")));
-                }
-                if (arenaData.containsKey("holograms")) {
-                    List<String> hologramUuids = (List<String>) arenaData.get("holograms");
-                    for (String uuidStr : hologramUuids) {
-                        arena.addHologramUuid(UUID.fromString(uuidStr));
-                    }
-                }
-                if (arenaData.containsKey("pointHolograms")) {
-                    Map<String, List<String>> pointHologramsData = (Map<String, List<String>>) arenaData.get("pointHolograms");
-                    for (Map.Entry<String, List<String>> phEntry : pointHologramsData.entrySet()) {
-                        String key = phEntry.getKey();
-                        for (String uuidStr : phEntry.getValue()) {
-                            arena.addPointHologram(key, UUID.fromString(uuidStr));
+                        if (arenaData.containsKey("start")) {
+                            arena.setStartLocation(deserializeLocation((Map<String, Object>) arenaData.get("start")));
                         }
-                    }
-                }
-                if (arenaData.containsKey("fallY")) {
-                    arena.setFallY(((Number) arenaData.get("fallY")).intValue());
-                }
-                if (arenaData.containsKey("author")) {
-                    arena.setAuthor((String) arenaData.get("author"));
-                }
+                        if (arenaData.containsKey("end")) {
+                            arena.setEndLocation(deserializeLocation((Map<String, Object>) arenaData.get("end")));
+                        }
+                        if (arenaData.containsKey("checkpoints")) {
+                            List<Map<String, Object>> checkpointsData = (List<Map<String, Object>>) arenaData.get("checkpoints");
+                            for (Map<String, Object> locData : checkpointsData) {
+                                Location loc = deserializeLocation(locData);
+                                if (loc != null) {
+                                    arena.addCheckpoint(loc);
+                                }
+                            }
+                        }
+                        if (arenaData.containsKey("icon")) {
+                            arena.setIcon(Material.valueOf((String) arenaData.get("icon")));
+                        }
+                        if (arenaData.containsKey("holograms")) {
+                            List<String> hologramUuids = (List<String>) arenaData.get("holograms");
+                            for (String uuidStr : hologramUuids) {
+                                arena.addHologramUuid(UUID.fromString(uuidStr));
+                            }
+                        }
+                        if (arenaData.containsKey("pointHolograms")) {
+                            Map<String, List<String>> pointHologramsData = (Map<String, List<String>>) arenaData.get("pointHolograms");
+                            for (Map.Entry<String, List<String>> phEntry : pointHologramsData.entrySet()) {
+                                String key = phEntry.getKey();
+                                for (String uuidStr : phEntry.getValue()) {
+                                    arena.addPointHologram(key, UUID.fromString(uuidStr));
+                                }
+                            }
+                        }
+                        if (arenaData.containsKey("fallY")) {
+                            arena.setFallY(((Number) arenaData.get("fallY")).intValue());
+                        }
+                        if (arenaData.containsKey("author")) {
+                            arena.setAuthor((String) arenaData.get("author"));
+                        }
 
-                parkourManager.getArenas().put(name, arena);
+                        parkourManager.getArenas().put(name, arena);
+                    } catch (IllegalArgumentException e) {
+                        brokenArenas.put(name, arenaData);
+                    }
                 }
             }
-            plugin.getLogger().info("已加载 " + parkourManager.getArenas().size() + " 个地图");
+            plugin.getLogger().info("已加载 " + parkourManager.getArenas().size() + " 个跑酷地图");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -116,7 +134,13 @@ public class DataManager {
             rootData.put("lobby", serializeLocation(lobbyLocation));
         }
 
-        Map<String, Map<String, Object>> arenasData = new HashMap<>();
+        Map<String, Boolean> visibilityData = new HashMap<>();
+        for (Map.Entry<UUID, Boolean> entry : playerVisibilityPrefs.entrySet()) {
+            visibilityData.put(entry.getKey().toString(), entry.getValue());
+        }
+        rootData.put("playerVisibility", visibilityData);
+
+        Map<String, Map<String, Object>> arenasData = new HashMap<>(brokenArenas);
         for (ParkourArena arena : parkourManager.getArenas().values()) {
             Map<String, Object> arenaData = new HashMap<>();
             if (arena.getStartLocation() != null) {
@@ -127,7 +151,9 @@ public class DataManager {
             }
             List<Map<String, Object>> checkpoints = new ArrayList<>();
             for (Location loc : arena.getCheckpoints()) {
-                checkpoints.add(serializeLocation(loc));
+                if (loc != null) {
+                    checkpoints.add(serializeLocation(loc));
+                }
             }
             arenaData.put("checkpoints", checkpoints);
             arenaData.put("icon", arena.getIcon().name());
@@ -184,7 +210,9 @@ public class DataManager {
         if (worldName == null) return null;
         
         World world = Bukkit.getWorld(worldName);
-        if (world == null) return null;
+        if (world == null) {
+            throw new IllegalArgumentException("世界不存在: " + worldName);
+        }
         
         double x = ((Number) map.get("x")).doubleValue();
         double y = ((Number) map.get("y")).doubleValue();
@@ -192,5 +220,14 @@ public class DataManager {
         float yaw = ((Number) map.get("yaw")).floatValue();
         float pitch = ((Number) map.get("pitch")).floatValue();
         return new Location(world, x, y, z, yaw, pitch);
+    }
+
+    public boolean getPlayerVisibility(UUID uuid) {
+        return playerVisibilityPrefs.getOrDefault(uuid, false);
+    }
+
+    public void setPlayerVisibility(UUID uuid, boolean hidden) {
+        playerVisibilityPrefs.put(uuid, hidden);
+        saveArenas();
     }
 }

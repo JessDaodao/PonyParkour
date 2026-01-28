@@ -14,6 +14,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Sound;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +63,24 @@ public class ParkourManager {
             endSession(player);
         }
         ParkourSession session = new ParkourSession(player, arena);
+        session.saveInventory();
+        
+        boolean hidden = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getPlayerVisibility(player.getUniqueId());
+        session.setPlayersHidden(hidden);
+        
         sessions.put(player.getUniqueId(), session);
+        
+        player.getInventory().clear();
+        giveParkourItems(player);
+        
+        if (hidden) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!p.getUniqueId().equals(player.getUniqueId())) {
+                    player.hidePlayer(fun.eqad.ponyparkour.PonyParkour.getInstance(), p);
+                }
+            }
+            player.sendMessage(fun.eqad.ponyparkour.PonyParkour.getInstance().getConfigManager().getPrefix() + "§a已隐藏其他玩家");
+        }
         
         Location startLoc = arena.getStartLocation().clone().add(0, 20, 0);
         player.teleport(startLoc);
@@ -73,12 +93,15 @@ public class ParkourManager {
         player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
         player.setSaturation(20);
+        player.setCollidable(false);
         
         player.sendTitle("§a" + arena.getName(), "§7制作人员: " + arena.getAuthor(), 10, 70, 20);
     }
 
     public void endSession(Player player) {
         if (sessions.containsKey(player.getUniqueId())) {
+            ParkourSession session = sessions.get(player.getUniqueId());
+            session.restoreInventory();
             sessions.remove(player.getUniqueId());
 
             Location lobby = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getLobbyLocation();
@@ -89,11 +112,42 @@ public class ParkourManager {
             player.removePotionEffect(PotionEffectType.JUMP);
             player.removePotionEffect(PotionEffectType.SLOW_FALLING);
             player.setWalkSpeed(0.2f);
+            player.setCollidable(true);
+            
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                player.showPlayer(fun.eqad.ponyparkour.PonyParkour.getInstance(), p);
+            }
         }
+    }
+
+    private void giveParkourItems(Player player) {
+        ItemStack leaveItem = new ItemStack(Material.BARRIER);
+        ItemMeta leaveMeta = leaveItem.getItemMeta();
+        leaveMeta.setDisplayName("§c退出跑酷");
+        leaveItem.setItemMeta(leaveMeta);
+        
+        ItemStack hideItem = new ItemStack(Material.ENDER_EYE);
+        ItemMeta hideMeta = hideItem.getItemMeta();
+        
+        ParkourSession session = getSession(player);
+        if (session != null && session.arePlayersHidden()) {
+            hideMeta.setDisplayName("§a显示/隐藏玩家 §7(当前: 隐藏)");
+        } else {
+            hideMeta.setDisplayName("§a显示/隐藏玩家 §7(当前: 显示)");
+        }
+        
+        hideItem.setItemMeta(hideMeta);
+        
+        player.getInventory().setItem(3, leaveItem);
+        player.getInventory().setItem(5, hideItem);
     }
 
     public ParkourSession getSession(Player player) {
         return sessions.get(player.getUniqueId());
+    }
+
+    public java.util.Collection<ParkourSession> getActiveSessions() {
+        return sessions.values();
     }
 
     public boolean isPlaying(Player player) {

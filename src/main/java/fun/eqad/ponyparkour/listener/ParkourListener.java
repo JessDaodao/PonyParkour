@@ -20,6 +20,12 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.spigotmc.event.entity.EntityDismountEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.block.Action;
+import org.bukkit.Material;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -167,6 +173,64 @@ public class ParkourListener implements Listener {
                 if (session.isFalling()) {
                     event.setCancelled(true);
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        if (!parkourManager.isPlaying(player)) return;
+
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if (event.getItem() == null) return;
+
+            if (event.getItem().getType() == Material.BARRIER) {
+                parkourManager.endSession(player);
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§c已退出跑酷");
+                event.setCancelled(true);
+            } else if (event.getItem().getType() == Material.ENDER_EYE) {
+                ParkourSession session = parkourManager.getSession(player);
+                boolean hide = !session.arePlayersHidden();
+                session.setPlayersHidden(hide);
+                
+                ItemStack item = event.getItem();
+                org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                
+                if (hide) {
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (!p.getUniqueId().equals(player.getUniqueId())) {
+                            player.hidePlayer(plugin, p);
+                        }
+                    }
+                    meta.setDisplayName("§a显示/隐藏玩家 §7(当前: 隐藏)");
+                    player.sendMessage(plugin.getConfigManager().getPrefix() + "§a已隐藏其他玩家");
+                } else {
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        player.showPlayer(plugin, p);
+                    }
+                    meta.setDisplayName("§a显示/隐藏玩家 §7(当前: 显示)");
+                    player.sendMessage(plugin.getConfigManager().getPrefix() + "§a已显示其他玩家");
+                }
+                item.setItemMeta(meta);
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+        if (parkourManager.isPlaying(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent event) {
+        Player joinedPlayer = event.getPlayer();
+        for (ParkourSession session : parkourManager.getActiveSessions()) {
+            if (session.arePlayersHidden()) {
+                session.getPlayer().hidePlayer(plugin, joinedPlayer);
             }
         }
     }
