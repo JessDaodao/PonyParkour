@@ -11,3 +11,7 @@ commands:
     description: Main command for PonyParkour
     usage: /parkour <subcommand>
     aliases: [pk]
+permissions:
+  ponyparkour.admin:
+    description: 允许使用管理员指令
+    default: op
