@@ -131,15 +131,15 @@ public class ParkourManager {
         
         ParkourSession session = getSession(player);
         if (session != null && session.arePlayersHidden()) {
-            hideMeta.setDisplayName("§a显示/隐藏玩家 §7(当前: 隐藏)");
+            hideMeta.setDisplayName("§a显示/隐藏其他玩家 §7(当前: 隐藏)");
         } else {
-            hideMeta.setDisplayName("§a显示/隐藏玩家 §7(当前: 显示)");
+            hideMeta.setDisplayName("§a显示/隐藏其他玩家 §7(当前: 显示)");
         }
         
         hideItem.setItemMeta(hideMeta);
         
-        player.getInventory().setItem(3, leaveItem);
-        player.getInventory().setItem(5, hideItem);
+        player.getInventory().setItem(5, leaveItem);
+        player.getInventory().setItem(3, hideItem);
     }
 
     public ParkourSession getSession(Player player) {

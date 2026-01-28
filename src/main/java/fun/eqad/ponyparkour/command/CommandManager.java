@@ -329,8 +329,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             sender.sendMessage(" §7/pk join <名称> §8- §7加入跑酷");
             sender.sendMessage(" §7/pk leave §8- §7离开跑酷");
             sender.sendMessage(" §7/pk gui §8- §7打开地图列表");
-            sender.sendMessage(" §7/pk reload §8- §7重载配置");
-            sender.sendMessage(" §7/pk about §8- §7关于插件");
+            sender.sendMessage(" §7/pk reload §8- §7重载配置文件");
+            sender.sendMessage(" §7/pk about §8- §7关于PonyParkour");
         } else {
             sender.sendMessage(" §7/parkour create <名称> §8- §7创建跑酷地图");
             sender.sendMessage(" §7/parkour delete <参数> <名称> §8- §7删除地图或地图点位");
@@ -338,8 +338,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             sender.sendMessage(" §7/parkour join <名称> §8- §7加入跑酷");
             sender.sendMessage(" §7/parkour leave §8- §7离开跑酷");
             sender.sendMessage(" §7/parkour gui §8- §7打开地图列表");
-            sender.sendMessage(" §7/parkour reload §8- §7重载配置");
-            sender.sendMessage(" §7/parkour about §8- §7关于插件");
+            sender.sendMessage(" §7/parkour reload §8- §7重载配置文件");
+            sender.sendMessage(" §7/parkour about §8- §7关于PonyParkour");
         }
     }
 

@@ -194,6 +194,8 @@ public class ParkourListener implements Listener {
                 boolean hide = !session.arePlayersHidden();
                 session.setPlayersHidden(hide);
                 
+                plugin.getDataManager().setPlayerVisibility(player.getUniqueId(), hide);
+                
                 ItemStack item = event.getItem();
                 org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
                 
@@ -203,13 +205,13 @@ public class ParkourListener implements Listener {
                             player.hidePlayer(plugin, p);
                         }
                     }
-                    meta.setDisplayName("§a显示/隐藏玩家 §7(当前: 隐藏)");
+                    meta.setDisplayName("§a显示/隐藏其他玩家 §7(当前: 隐藏)");
                     player.sendMessage(plugin.getConfigManager().getPrefix() + "§a已隐藏其他玩家");
                 } else {
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         player.showPlayer(plugin, p);
                     }
-                    meta.setDisplayName("§a显示/隐藏玩家 §7(当前: 显示)");
+                    meta.setDisplayName("§a显示/隐藏其他玩家 §7(当前: 显示)");
                     player.sendMessage(plugin.getConfigManager().getPrefix() + "§a已显示其他玩家");
                 }
                 item.setItemMeta(meta);
