@@ -11,8 +11,6 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 
 import java.util.HashMap;
 import java.util.Map;

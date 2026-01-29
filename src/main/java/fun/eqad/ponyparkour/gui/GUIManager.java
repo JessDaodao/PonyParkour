@@ -2,7 +2,6 @@ package fun.eqad.ponyparkour.gui;
 
 import fun.eqad.ponyparkour.PonyParkour;
 import fun.eqad.ponyparkour.arena.ParkourArena;
-import fun.eqad.ponyparkour.arena.ParkourSession;
 import fun.eqad.ponyparkour.manager.ParkourManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
