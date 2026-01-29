@@ -88,6 +88,7 @@ public class ParkourListener implements Listener {
         if (isSameBlock(to, arena.getEndLocation())) {
             if (session.isFinished()) return;
             session.setFinished(true);
+            session.setFinishTime(System.currentTimeMillis());
 
             long timeTaken = System.currentTimeMillis() - session.getStartTime();
             double timeSeconds = timeTaken / 1000.0;

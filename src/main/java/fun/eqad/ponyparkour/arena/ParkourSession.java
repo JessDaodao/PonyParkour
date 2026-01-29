@@ -14,6 +14,7 @@ public class ParkourSession {
     private ItemStack[] savedArmor;
     private boolean playersHidden;
     private boolean finished;
+    private long finishTime;
 
     public ParkourSession(Player player, ParkourArena arena) {
         this.player = player;
@@ -104,6 +105,14 @@ public class ParkourSession {
 
     public void setFinished(boolean finished) {
         this.finished = finished;
+    }
+
+    public long getFinishTime() {
+        return finishTime;
+    }
+
+    public void setFinishTime(long finishTime) {
+        this.finishTime = finishTime;
     }
 
     public long getStartTime() {

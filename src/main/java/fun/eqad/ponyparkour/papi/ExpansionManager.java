@@ -51,7 +51,12 @@ public class ExpansionManager extends PlaceholderExpansion {
                 if (session.isFalling()) {
                     return "00:00.000";
                 }
-                long timeTaken = System.currentTimeMillis() - session.getStartTime();
+                long timeTaken;
+                if (session.isFinished()) {
+                    timeTaken = session.getFinishTime() - session.getStartTime();
+                } else {
+                    timeTaken = System.currentTimeMillis() - session.getStartTime();
+                }
                 long minutes = (timeTaken / 1000) / 60;
                 long seconds = (timeTaken / 1000) % 60;
                 long millis = timeTaken % 1000;
