@@ -91,7 +91,7 @@ public class ParkourListener implements Listener {
 
             long timeTaken = System.currentTimeMillis() - session.getStartTime();
             double timeSeconds = timeTaken / 1000.0;
-            player.sendMessage(prefix + "§6跑酷完成！用时: " + timeSeconds + "秒!");
+            player.sendMessage(prefix + "§6跑酷完成! 用时: " + timeSeconds + "秒!");
 
             plugin.getDataManager().saveRecord(arena.getName(), player.getUniqueId(), timeSeconds);
 
@@ -318,7 +318,7 @@ public class ParkourListener implements Listener {
                 boolean pendingTeleport = plugin.getDataManager().isPendingLobbyTeleport(joinedPlayer.getUniqueId());
                 
                 if (savedArena != null) {
-                    TextComponent message = new TextComponent(plugin.getConfigManager().getPrefix() + "§e检测到您有未完成的跑酷进度，是否继续？ ");
+                    TextComponent message = new TextComponent(plugin.getConfigManager().getPrefix() + "§e检测到您有未完成的跑酷进度, 是否继续? ");
                     
                     TextComponent yes = new TextComponent("§a[继续游玩]");
                     yes.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/parkour resume"));

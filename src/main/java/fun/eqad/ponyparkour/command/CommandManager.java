@@ -217,7 +217,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                                 spawnHologram(cpLoc, "§b[检查点]", String.valueOf(index + 1), arena, "checkpoint_" + index);
                                 player.sendMessage(prefix + "§a已为 " + arenaName + " 添加检查点 " + (index + 1));
                             } else {
-                                player.sendMessage(prefix + "§c检查点编号不连续，当前最大编号: " + arena.getCheckpoints().size());
+                                player.sendMessage(prefix + "§c检查点编号不连续, 当前最大编号: " + arena.getCheckpoints().size());
                             }
                         } else {
                             int newIndex = arena.getCheckpoints().size();
