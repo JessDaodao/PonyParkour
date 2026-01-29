@@ -74,6 +74,9 @@ public class ParkourSession {
         }
     }
 
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
 
     public void resetStartTime() {
         this.startTime = System.currentTimeMillis();

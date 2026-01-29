@@ -11,6 +11,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -108,8 +110,13 @@ public class ParkourManager {
         
         sessions.put(player.getUniqueId(), session);
         
+        long savedElapsed = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getSavedElapsedTime(player.getUniqueId());
+        long current = System.currentTimeMillis();
+        session.setStartTime(current - (savedElapsed * 1000));
+        
         fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerSession(player.getUniqueId(), arena.getName());
         fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerCheckpoint(player.getUniqueId(), checkpointIndex);
+        fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerElapsedTime(player.getUniqueId(), savedElapsed);
         fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerInventory(player.getUniqueId(), session.getSavedInventory(), session.getSavedArmor());
         
         player.getInventory().clear();
@@ -143,13 +150,15 @@ public class ParkourManager {
         player.setCollidable(false);
 
         session.setFalling(false);
-        session.resetStartTime();
+        session.setStartTime(current - (savedElapsed * 1000));
     }
 
     public void pauseSession(Player player) {
         if (sessions.containsKey(player.getUniqueId())) {
             ParkourSession session = sessions.get(player.getUniqueId());
             
+            long elapsed = (System.currentTimeMillis() - session.getStartTime()) / 1000;
+            fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerElapsedTime(player.getUniqueId(), elapsed);
             fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerCheckpoint(player.getUniqueId(), session.getCurrentCheckpointIndex());
             
             session.restoreInventory();
