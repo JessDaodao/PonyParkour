@@ -1,6 +1,7 @@
 package fun.eqad.ponyparkour.arena;
 
 import org.bukkit.Location;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -12,6 +13,7 @@ public class ParkourSession {
     private boolean isFalling;
     private ItemStack[] savedInventory;
     private ItemStack[] savedArmor;
+    private GameMode savedGameMode;
     private boolean playersHidden;
     private boolean finished;
     private long finishTime;
@@ -31,12 +33,22 @@ public class ParkourSession {
         this.savedArmor = player.getInventory().getArmorContents();
     }
 
+    public void saveGameMode() {
+        this.savedGameMode = player.getGameMode();
+    }
+
     public void restoreInventory() {
         if (savedInventory != null) {
             player.getInventory().setContents(savedInventory);
         }
         if (savedArmor != null) {
             player.getInventory().setArmorContents(savedArmor);
+        }
+    }
+
+    public void restoreGameMode() {
+        if (savedGameMode != null) {
+            player.setGameMode(savedGameMode);
         }
     }
 

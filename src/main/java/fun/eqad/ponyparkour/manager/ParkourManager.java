@@ -4,6 +4,7 @@ import fun.eqad.ponyparkour.arena.ParkourArena;
 import fun.eqad.ponyparkour.arena.ParkourSession;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -58,6 +59,7 @@ public class ParkourManager {
         }
         ParkourSession session = new ParkourSession(player, arena);
         session.saveInventory();
+        session.saveGameMode();
         
         boolean hidden = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getPlayerVisibility(player.getUniqueId());
         session.setPlayersHidden(hidden);
@@ -91,6 +93,7 @@ public class ParkourManager {
         player.setFoodLevel(20);
         player.setSaturation(20);
         player.setCollidable(false);
+        player.setGameMode(GameMode.ADVENTURE);
         
         player.sendTitle("§a" + arena.getName(), "§7制作人员: " + arena.getAuthor(), 10, 70, 20);
     }
@@ -101,6 +104,7 @@ public class ParkourManager {
         }
         ParkourSession session = new ParkourSession(player, arena);
         session.saveInventory();
+        session.saveGameMode();
         session.setCheckpoint(checkpointIndex);
         
         boolean hidden = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getPlayerVisibility(player.getUniqueId());
@@ -146,6 +150,7 @@ public class ParkourManager {
         player.setFoodLevel(20);
         player.setSaturation(20);
         player.setCollidable(false);
+        player.setGameMode(GameMode.ADVENTURE);
 
         session.setFalling(false);
         session.setStartTime(current - (savedElapsed * 1000));
@@ -160,6 +165,7 @@ public class ParkourManager {
             fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerCheckpoint(player.getUniqueId(), session.getCurrentCheckpointIndex());
             
             session.restoreInventory();
+            session.restoreGameMode();
             sessions.remove(player.getUniqueId());
 
             if (player.isOnline()) {
@@ -181,6 +187,7 @@ public class ParkourManager {
         if (sessions.containsKey(player.getUniqueId())) {
             ParkourSession session = sessions.get(player.getUniqueId());
             session.restoreInventory();
+            session.restoreGameMode();
             sessions.remove(player.getUniqueId());
 
             if (player.isOnline()) {
