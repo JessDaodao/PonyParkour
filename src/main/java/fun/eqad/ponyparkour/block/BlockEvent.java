@@ -3,6 +3,7 @@ package fun.eqad.ponyparkour.block;
 import fun.eqad.ponyparkour.PonyParkour;
 import fun.eqad.ponyparkour.arena.ParkourSession;
 import fun.eqad.ponyparkour.manager.ParkourManager;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -15,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
@@ -31,6 +33,7 @@ public class BlockEvent implements Listener {
         this.plugin = plugin;
         this.parkourManager = plugin.getParkourManager();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        startBlockCheckTask();
     }
 
     @EventHandler
@@ -38,34 +41,18 @@ public class BlockEvent implements Listener {
         Player player = event.getPlayer();
         if (!parkourManager.isPlaying(player)) return;
         if (!plugin.getConfigManager().shouldSpecialBlock()) return;
-        
+
         Location to = event.getTo();
         if (to == null) return;
 
-        if (event.getFrom().getBlockX() != to.getBlockX() || 
-            event.getFrom().getBlockY() != to.getBlockY() || 
-            event.getFrom().getBlockZ() != to.getBlockZ()) {
+        if (event.getFrom().getBlockX() != to.getBlockX() ||
+                event.getFrom().getBlockY() != to.getBlockY() ||
+                event.getFrom().getBlockZ() != to.getBlockZ()) {
             plugin.getGhostBlockManager().scanNearbyBlocks(player);
         }
 
         Block blockUnder = to.clone().subtract(0, 0.1, 0).getBlock();
-        Material type = blockUnder.getType();
-
-        if (type == Material.BLUE_WOOL) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 2, false, false));
-            return;
-        } else if (type == Material.GREEN_WOOL) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 40, 2, false, false));
-            return;
-        } else if (type == Material.RED_WOOL) {
-            ParkourSession session = parkourManager.getSession(player);
-            player.teleport(session.getLastCheckpointLocation());
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
-            player.sendMessage(plugin.getConfigManager().getPrefix() + "§c不好, 你死翘翘了!");
-            return;
-        }
-
-        if (type == Material.STICKY_PISTON) {
+        if (blockUnder.getType() == Material.STICKY_PISTON) {
             processPiston(player, blockUnder);
             return;
         }
@@ -82,6 +69,25 @@ public class BlockEvent implements Listener {
                         return;
                     }
                 }
+            }
+        }
+    }
+
+    public void handleBlockEffect(Player player, Block block) {
+        if (!plugin.getConfigManager().shouldSpecialBlock()) return;
+
+        Material type = block.getType();
+
+        if (type == Material.BLUE_WOOL) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 2, false, false));
+        } else if (type == Material.GREEN_WOOL) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 40, 2, false, false));
+        } else if (type == Material.RED_WOOL) {
+            ParkourSession session = parkourManager.getSession(player);
+            if (session != null) {
+                player.teleport(session.getLastCheckpointLocation());
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§c不好, 你死翘翘了!");
             }
         }
     }
@@ -132,5 +138,22 @@ public class BlockEvent implements Listener {
             player.setVelocity(velocity);
             player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.0f);
         }
+    }
+
+    private void startBlockCheckTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (parkourManager.isPlaying(player)) {
+                        Location loc = player.getLocation().subtract(0, 0.1, 0);
+                        Block block = loc.getBlock();
+                        if (block.getType() != Material.AIR && block.getType() != Material.PISTON && block.getType() != Material.STICKY_PISTON) {
+                            handleBlockEffect(player, block);
+                        }
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 2L);
     }
 }
