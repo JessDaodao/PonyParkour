@@ -43,7 +43,7 @@ public class BlockEvent implements Listener {
             plugin.getGhostBlockManager().scanNearbyBlocks(player);
         }
 
-        Block blockUnder = to.getBlock().getRelative(BlockFace.DOWN);
+        Block blockUnder = player.getLocation().subtract(0, 0.1, 0).getBlock();
         Material type = blockUnder.getType();
 
         if (type == Material.BLUE_WOOL) {
