@@ -124,8 +124,8 @@ public class GUIManager implements Listener {
         backMeta.setDisplayName(ChatColor.RED + "返回上一级");
         backItem.setItemMeta(backMeta);
 
-        gui.setItem(11, playItem);
-        gui.setItem(15, leaderboardItem);
+        gui.setItem(12, playItem);
+        gui.setItem(14, leaderboardItem);
         gui.setItem(18, backItem);
 
         player.openInventory(gui);
