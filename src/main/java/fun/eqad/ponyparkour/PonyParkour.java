@@ -51,6 +51,13 @@ public final class PonyParkour extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (parkourManager != null) {
+            for (org.bukkit.entity.Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
+                if (parkourManager.isPlaying(player)) {
+                    parkourManager.pauseSession(player);
+                }
+            }
+        }
         if (ghostBlockManager != null) {
             ghostBlockManager.restoreAllBlocks();
         }

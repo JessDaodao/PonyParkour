@@ -33,6 +33,7 @@ public class DataManager {
     private final Map<String, Map<String, Object>> brokenArenas = new HashMap<>();
     private final Map<UUID, Boolean> playerVisibilityPrefs = new HashMap<>();
     private final Map<UUID, String> savedSessions = new HashMap<>();
+    private final Map<UUID, Integer> savedCheckpoints = new HashMap<>();
     private final Map<UUID, String> savedInventories = new HashMap<>();
     private final Map<UUID, String> savedArmors = new HashMap<>();
     private final Map<UUID, Boolean> pendingLobbyTeleport = new HashMap<>();
@@ -79,6 +80,13 @@ public class DataManager {
                 Map<String, String> sessionsData = (Map<String, String>) rootData.get("savedSessions");
                 for (Map.Entry<String, String> entry : sessionsData.entrySet()) {
                     savedSessions.put(UUID.fromString(entry.getKey()), entry.getValue());
+                }
+            }
+
+            if (rootData.containsKey("savedCheckpoints")) {
+                Map<String, Double> checkpointsData = (Map<String, Double>) rootData.get("savedCheckpoints");
+                for (Map.Entry<String, Double> entry : checkpointsData.entrySet()) {
+                    savedCheckpoints.put(UUID.fromString(entry.getKey()), entry.getValue().intValue());
                 }
             }
 
@@ -193,6 +201,12 @@ public class DataManager {
             sessionsData.put(entry.getKey().toString(), entry.getValue());
         }
         rootData.put("savedSessions", sessionsData);
+
+        Map<String, Integer> checkpointsData = new HashMap<>();
+        for (Map.Entry<UUID, Integer> entry : savedCheckpoints.entrySet()) {
+            checkpointsData.put(entry.getKey().toString(), entry.getValue());
+        }
+        rootData.put("savedCheckpoints", checkpointsData);
 
         Map<String, String> invData = new HashMap<>();
         for (Map.Entry<UUID, String> entry : savedInventories.entrySet()) {
@@ -324,6 +338,22 @@ public class DataManager {
 
     public void removeSavedSession(UUID uuid) {
         savedSessions.remove(uuid);
+        savedCheckpoints.remove(uuid);
+        savedInventories.remove(uuid);
+        savedArmors.remove(uuid);
+        saveArenas();
+    }
+
+    public void savePlayerCheckpoint(UUID uuid, int checkpoint) {
+        savedCheckpoints.put(uuid, checkpoint);
+        saveArenas();
+    }
+
+    public int getSavedCheckpoint(UUID uuid) {
+        return savedCheckpoints.getOrDefault(uuid, -1);
+    }
+
+    public void clearSavedInventory(UUID uuid) {
         savedInventories.remove(uuid);
         savedArmors.remove(uuid);
         saveArenas();

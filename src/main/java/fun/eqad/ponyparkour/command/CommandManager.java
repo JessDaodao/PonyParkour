@@ -291,6 +291,21 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 }
                 parkourManager.startSession(player, arenaJoin);
                 break;
+            case "resume":
+                String savedArenaName = plugin.getDataManager().getSavedSession(player.getUniqueId());
+                if (savedArenaName == null) {
+                    player.sendMessage(prefix + "§c你没有正在进行的跑酷");
+                    return true;
+                }
+                ParkourArena savedArena = parkourManager.getArena(savedArenaName);
+                if (savedArena == null) {
+                    player.sendMessage(prefix + "§c保存的跑酷地图已不存在");
+                    plugin.getDataManager().removeSavedSession(player.getUniqueId());
+                    return true;
+                }
+                int checkpoint = plugin.getDataManager().getSavedCheckpoint(player.getUniqueId());
+                parkourManager.resumeSession(player, savedArena, checkpoint);
+                break;
             case "leave":
                 parkourManager.endSession(player);
                 break;
@@ -327,6 +342,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             sender.sendMessage(" §7/pk delete <参数> <名称> §8- §7删除地图或地图点位");
             sender.sendMessage(" §7/pk set <参数> <名称> §8- §7设置地图点位");
             sender.sendMessage(" §7/pk join <名称> §8- §7加入跑酷");
+            sender.sendMessage(" §7/pk resume §8- §7继续上次的跑酷");
             sender.sendMessage(" §7/pk leave §8- §7离开跑酷");
             sender.sendMessage(" §7/pk gui §8- §7打开地图列表");
             sender.sendMessage(" §7/pk reload §8- §7重载配置文件");
@@ -336,6 +352,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             sender.sendMessage(" §7/parkour delete <参数> <名称> §8- §7删除地图或地图点位");
             sender.sendMessage(" §7/parkour set <参数> <名称> §8- §7设置地图点位");
             sender.sendMessage(" §7/parkour join <名称> §8- §7加入跑酷");
+            sender.sendMessage(" §7/parkour resume §8- §7继续上次的跑酷");
             sender.sendMessage(" §7/parkour leave §8- §7离开跑酷");
             sender.sendMessage(" §7/parkour gui §8- §7打开地图列表");
             sender.sendMessage(" §7/parkour reload §8- §7重载配置文件");
@@ -362,6 +379,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             if ("join".startsWith(args[0].toLowerCase())) commands.add("join");
             if ("leave".startsWith(args[0].toLowerCase())) commands.add("leave");
             if ("gui".startsWith(args[0].toLowerCase())) commands.add("gui");
+            if ("resume".startsWith(args[0].toLowerCase())) commands.add("resume");
             if ("reload".startsWith(args[0].toLowerCase())) commands.add("reload");
             if ("about".startsWith(args[0].toLowerCase())) commands.add("about");
             return commands;

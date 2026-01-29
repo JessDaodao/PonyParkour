@@ -101,9 +101,60 @@ public class ParkourManager {
         player.sendTitle("§a" + arena.getName(), "§7制作人员: " + arena.getAuthor(), 10, 70, 20);
     }
 
+    public void resumeSession(Player player, ParkourArena arena, int checkpointIndex) {
+        if (sessions.containsKey(player.getUniqueId())) {
+            endSession(player);
+        }
+        ParkourSession session = new ParkourSession(player, arena);
+        session.saveInventory();
+        session.setCheckpoint(checkpointIndex);
+        
+        boolean hidden = fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().getPlayerVisibility(player.getUniqueId());
+        session.setPlayersHidden(hidden);
+        
+        sessions.put(player.getUniqueId(), session);
+        
+        fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerSession(player.getUniqueId(), arena.getName());
+        fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerCheckpoint(player.getUniqueId(), checkpointIndex);
+        fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerInventory(player.getUniqueId(), session.getSavedInventory(), session.getSavedArmor());
+        
+        player.getInventory().clear();
+        giveParkourItems(player);
+        
+        if (hidden) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!p.getUniqueId().equals(player.getUniqueId())) {
+                    player.hidePlayer(fun.eqad.ponyparkour.PonyParkour.getInstance(), p);
+                }
+            }
+            player.sendMessage(fun.eqad.ponyparkour.PonyParkour.getInstance().getConfigManager().getPrefix() + "§a已隐藏其他玩家");
+        }
+        
+        Location loc;
+        if (checkpointIndex >= 0 && checkpointIndex < arena.getCheckpoints().size()) {
+            loc = arena.getCheckpoints().get(checkpointIndex);
+        } else {
+            loc = arena.getStartLocation().clone().add(0, 1, 0);
+        }
+        
+        Location tpLoc = loc.clone();
+        tpLoc.setY(tpLoc.getY() + 0.5);
+        tpLoc.setYaw(player.getLocation().getYaw());
+        tpLoc.setPitch(player.getLocation().getPitch());
+        player.teleport(tpLoc);
+        
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setSaturation(20);
+        player.setCollidable(false);
+    }
+
     public void pauseSession(Player player) {
         if (sessions.containsKey(player.getUniqueId())) {
             ParkourSession session = sessions.get(player.getUniqueId());
+            
+            fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerCheckpoint(player.getUniqueId(), session.getCurrentCheckpointIndex());
+            
             session.restoreInventory();
             sessions.remove(player.getUniqueId());
 

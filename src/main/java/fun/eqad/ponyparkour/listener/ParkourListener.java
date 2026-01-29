@@ -113,6 +113,7 @@ public class ParkourListener implements Listener {
             if (isSameBlock(to, checkpoints.get(i))) {
                 if (i > session.getCurrentCheckpointIndex()) {
                     session.setCheckpoint(i);
+                    plugin.getDataManager().savePlayerCheckpoint(player.getUniqueId(), i);
                     
                     new BukkitRunnable() {
                         int count = 0;
@@ -316,7 +317,32 @@ public class ParkourListener implements Listener {
                 String savedArena = plugin.getDataManager().getSavedSession(joinedPlayer.getUniqueId());
                 boolean pendingTeleport = plugin.getDataManager().isPendingLobbyTeleport(joinedPlayer.getUniqueId());
                 
-                if (savedArena != null || pendingTeleport) {
+                if (savedArena != null) {
+                    TextComponent message = new TextComponent(plugin.getConfigManager().getPrefix() + "§e检测到您有未完成的跑酷进度，是否继续？ ");
+                    
+                    TextComponent yes = new TextComponent("§a[继续游玩]");
+                    yes.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/parkour resume"));
+                    yes.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.ComponentBuilder("§a点击继续游玩").create()));
+                    
+                    message.addExtra(yes);
+                    joinedPlayer.spigot().sendMessage(message);
+                    
+                    Location lobby = plugin.getDataManager().getLobbyLocation();
+                    if (lobby != null) {
+                        joinedPlayer.teleport(lobby);
+                    }
+                    
+                    ItemStack[] savedInv = plugin.getDataManager().getSavedInventory(joinedPlayer.getUniqueId());
+                    ItemStack[] savedArmor = plugin.getDataManager().getSavedArmor(joinedPlayer.getUniqueId());
+                    
+                    if (savedInv != null) {
+                        joinedPlayer.getInventory().setContents(savedInv);
+                    }
+                    if (savedArmor != null) {
+                        joinedPlayer.getInventory().setArmorContents(savedArmor);
+                    }
+
+                } else if (pendingTeleport) {
                     ItemStack[] savedInv = plugin.getDataManager().getSavedInventory(joinedPlayer.getUniqueId());
                     ItemStack[] savedArmor = plugin.getDataManager().getSavedArmor(joinedPlayer.getUniqueId());
                     
@@ -332,13 +358,8 @@ public class ParkourListener implements Listener {
                         joinedPlayer.teleport(lobby);
                     }
                     
-                    if (savedArena != null) {
-                        plugin.getDataManager().removeSavedSession(joinedPlayer.getUniqueId());
-                    }
-                    
-                    if (pendingTeleport) {
-                        plugin.getDataManager().setPendingLobbyTeleport(joinedPlayer.getUniqueId(), false);
-                    }
+                    plugin.getDataManager().setPendingLobbyTeleport(joinedPlayer.getUniqueId(), false);
+                    plugin.getDataManager().clearSavedInventory(joinedPlayer.getUniqueId());
                 }
 
                 for (ParkourSession session : parkourManager.getActiveSessions()) {
