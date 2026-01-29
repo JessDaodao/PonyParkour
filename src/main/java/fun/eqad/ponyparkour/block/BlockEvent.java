@@ -17,10 +17,15 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class BlockEvent implements Listener {
 
     private final PonyParkour plugin;
     private final ParkourManager parkourManager;
+    private final Map<UUID, Long> pistonCooldowns = new HashMap<>();
 
     public BlockEvent(PonyParkour plugin) {
         this.plugin = plugin;
@@ -43,54 +48,89 @@ public class BlockEvent implements Listener {
             plugin.getGhostBlockManager().scanNearbyBlocks(player);
         }
 
-        Block blockUnder = player.getLocation().subtract(0, 0.1, 0).getBlock();
+        Block blockUnder = to.clone().subtract(0, 0.1, 0).getBlock();
         Material type = blockUnder.getType();
 
         if (type == Material.BLUE_WOOL) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 2, false, false));
+            return;
         } else if (type == Material.GREEN_WOOL) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 40, 2, false, false));
+            return;
         } else if (type == Material.RED_WOOL) {
             ParkourSession session = parkourManager.getSession(player);
             player.teleport(session.getLastCheckpointLocation());
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             player.sendMessage(plugin.getConfigManager().getPrefix() + "§c不好, 你死翘翘了!");
-        } else if (type == Material.STICKY_PISTON) {
-            if (blockUnder.getBlockData() instanceof Directional) {
-                Directional directional = (Directional) blockUnder.getBlockData();
-                BlockFace facing = directional.getFacing();
-                
-                Vector velocity = new Vector(0, 0, 0);
-                double strength = 1.5;
-                double verticalBoost = 0.5;
+            return;
+        }
 
-                switch (facing) {
-                    case UP:
-                        velocity.setY(strength);
-                        break;
-                    case DOWN:
-                        velocity.setY(-strength);
-                        break;
-                    case NORTH:
-                        velocity.setZ(-strength).setY(verticalBoost);
-                        break;
-                    case SOUTH:
-                        velocity.setZ(strength).setY(verticalBoost);
-                        break;
-                    case WEST:
-                        velocity.setX(-strength).setY(verticalBoost);
-                        break;
-                    case EAST:
-                        velocity.setX(strength).setY(verticalBoost);
-                        break;
-                    default:
-                        velocity.setY(strength);
-                        break;
+        if (type == Material.STICKY_PISTON) {
+            processPiston(player, blockUnder);
+            return;
+        }
+
+        Block centerBlock = to.getBlock();
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST, BlockFace.EAST};
+        for (BlockFace face : faces) {
+            Block relative = centerBlock.getRelative(face);
+            if (relative.getType() == Material.STICKY_PISTON) {
+                if (relative.getBlockData() instanceof Directional) {
+                    Directional dir = (Directional) relative.getBlockData();
+                    if (dir.getFacing() == face.getOppositeFace()) {
+                        processPiston(player, relative);
+                        return;
+                    }
                 }
-                
-                player.setVelocity(velocity);
-                player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.0f);
             }
+        }
+    }
+
+    private void processPiston(Player player, Block pistonBlock) {
+        UUID playerId = player.getUniqueId();
+        long currentTime = System.currentTimeMillis();
+        if (pistonCooldowns.containsKey(playerId)) {
+            long lastTime = pistonCooldowns.get(playerId);
+            if (currentTime - lastTime < 500) {
+                return;
+            }
+        }
+        pistonCooldowns.put(playerId, currentTime);
+
+        if (pistonBlock.getBlockData() instanceof Directional) {
+            Directional directional = (Directional) pistonBlock.getBlockData();
+            BlockFace facing = directional.getFacing();
+            
+            Vector velocity = new Vector(0, 0, 0);
+            double strength = 3.0;
+            double upStrength = 1.8;
+            double verticalBoost = 0.7;
+
+            switch (facing) {
+                case UP:
+                    velocity.setY(upStrength);
+                    break;
+                case DOWN:
+                    return;
+                case NORTH:
+                    velocity.setZ(-strength).setY(verticalBoost);
+                    break;
+                case SOUTH:
+                    velocity.setZ(strength).setY(verticalBoost);
+                    break;
+                case WEST:
+                    velocity.setX(-strength).setY(verticalBoost);
+                    break;
+                case EAST:
+                    velocity.setX(strength).setY(verticalBoost);
+                    break;
+                default:
+                    velocity.setY(strength);
+                    break;
+            }
+            
+            player.setVelocity(velocity);
+            player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.0f);
         }
     }
 }
