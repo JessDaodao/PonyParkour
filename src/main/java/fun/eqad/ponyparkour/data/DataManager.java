@@ -254,12 +254,6 @@ public class DataManager {
             arenaData.put("checkpoints", checkpoints);
             arenaData.put("icon", arena.getIcon().name());
             
-            List<String> hologramUuids = new ArrayList<>();
-            for (UUID uuid : arena.getHologramUuids()) {
-                hologramUuids.add(uuid.toString());
-            }
-            arenaData.put("holograms", hologramUuids);
-
             Map<String, List<String>> pointHologramsData = new HashMap<>();
             for (Map.Entry<String, List<UUID>> entry : arena.getPointHolograms().entrySet()) {
                 List<String> uuids = new ArrayList<>();

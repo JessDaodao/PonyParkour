@@ -4,16 +4,10 @@ import fun.eqad.ponyparkour.arena.ParkourArena;
 import fun.eqad.ponyparkour.arena.ParkourSession;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Sound;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -147,6 +141,9 @@ public class ParkourManager {
         player.setFoodLevel(20);
         player.setSaturation(20);
         player.setCollidable(false);
+
+        session.setFalling(false);
+        session.resetStartTime();
     }
 
     public void pauseSession(Player player) {
