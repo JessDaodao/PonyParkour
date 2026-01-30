@@ -44,8 +44,17 @@ public class ExpansionManager extends PlaceholderExpansion {
         if (player == null) return "";
         if (params == null || params.isEmpty()) return null;
 
-        // %ponyparkour_time%
-        if (params.equalsIgnoreCase("time")) {
+        // %ponyparkour_arena%
+        if (params.equalsIgnoreCase("arena")) {
+            if (plugin.getParkourManager().isPlaying(player)) {
+                ParkourSession session = plugin.getParkourManager().getSession(player);
+                return session.getArena().getName();
+            }
+            return "None";
+        }
+
+        // %ponyparkour_time_[type]%
+        if (params.startsWith("time")) {
             if (plugin.getParkourManager().isPlaying(player)) {
                 ParkourSession session = plugin.getParkourManager().getSession(player);
                 if (session.isFalling()) {
@@ -60,18 +69,71 @@ public class ExpansionManager extends PlaceholderExpansion {
                 long minutes = (timeTaken / 1000) / 60;
                 long seconds = (timeTaken / 1000) % 60;
                 long millis = timeTaken % 1000;
-                return String.format("%02d:%02d.%03d", minutes, seconds, millis);
+                String text = String.format("%02d:%02d.%03d", minutes, seconds, millis);
+
+                String type = "def";
+                if (params.length() > "time".length()) {
+                    String[] parts = params.split("_");
+                    if (parts.length >= 2) {
+                        type = parts[1];
+                    }
+                }
+
+                if (type.equalsIgnoreCase("ani")) {
+                    long millisSinceLastMinute = timeTaken % 60000;
+                    long duration = 2000;
+                    if (millisSinceLastMinute < duration) {
+                        double progress = (double) millisSinceLastMinute / duration;
+                        int val = (int) (progress * 255);
+                        val = Math.max(0, Math.min(255, val));
+                        String hex = String.format("#FF%02X%02X", val, val);
+                        return net.md_5.bungee.api.ChatColor.of(hex) + text;
+                    } else {
+                        return net.md_5.bungee.api.ChatColor.WHITE + text;
+                    }
+                }
+
+                return text;
             }
             return "00:00.000";
         }
 
-        // %ponyparkour_arena_name%
-        if (params.equalsIgnoreCase("arena_name")) {
+        // %ponyparkour_checkpoint_[type]%
+        if (params.startsWith("checkpoint")) {
             if (plugin.getParkourManager().isPlaying(player)) {
                 ParkourSession session = plugin.getParkourManager().getSession(player);
-                return session.getArena().getName();
+                int current = session.getCurrentCheckpointIndex() + 1;
+                int total = session.getArena().getCheckpoints().size();
+                String text = current + "/" + total;
+
+                String type = "def";
+                if (params.length() > "checkpoint".length()) {
+                    String[] parts = params.split("_");
+                    if (parts.length >= 2) {
+                        type = parts[1];
+                    }
+                }
+
+                if (type.equalsIgnoreCase("ani")) {
+                    if (session.getCurrentCheckpointIndex() == -1) {
+                        return net.md_5.bungee.api.ChatColor.WHITE + text;
+                    }
+                    long elapsed = System.currentTimeMillis() - session.getLastCheckpointTime();
+                    long duration = 2000;
+                    if (elapsed < duration) {
+                        double progress = (double) elapsed / duration;
+                        int val = (int) (progress * 255);
+                        val = Math.max(0, Math.min(255, val));
+                        String hex = String.format("#FF%02X%02X", val, val);
+                        return net.md_5.bungee.api.ChatColor.of(hex) + text;
+                    } else {
+                        return net.md_5.bungee.api.ChatColor.WHITE + text;
+                    }
+                }
+
+                return text;
             }
-            return "None";
+            return "0/0";
         }
 
         // %ponyparkour_rank_<arena>_<rank>_[type]%
