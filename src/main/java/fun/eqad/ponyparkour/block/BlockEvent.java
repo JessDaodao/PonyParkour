@@ -82,6 +82,8 @@ public class BlockEvent implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 2, false, false));
         } else if (type == Material.GREEN_WOOL) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 40, 2, false, false));
+        } else if (type == Material.PURPLE_WOOL) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 40, 2, false, false));
         } else if (type == Material.RED_WOOL) {
             ParkourSession session = parkourManager.getSession(player);
             if (session != null) {
