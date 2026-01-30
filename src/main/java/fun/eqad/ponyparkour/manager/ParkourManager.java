@@ -159,7 +159,6 @@ public class ParkourManager {
     public void pauseSession(Player player) {
         if (sessions.containsKey(player.getUniqueId())) {
             ParkourSession session = sessions.get(player.getUniqueId());
-            session.stopBuffTask();
             
             long elapsed = (System.currentTimeMillis() - session.getStartTime()) / 1000;
             fun.eqad.ponyparkour.PonyParkour.getInstance().getDataManager().savePlayerElapsedTime(player.getUniqueId(), elapsed);
@@ -174,7 +173,6 @@ public class ParkourManager {
                 player.removePotionEffect(PotionEffectType.JUMP);
                 player.removePotionEffect(PotionEffectType.SLOW_FALLING);
                 player.removePotionEffect(PotionEffectType.LEVITATION);
-                player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
                 player.setWalkSpeed(0.2f);
                 player.setCollidable(true);
                 
@@ -188,7 +186,6 @@ public class ParkourManager {
     public void endSession(Player player) {
         if (sessions.containsKey(player.getUniqueId())) {
             ParkourSession session = sessions.get(player.getUniqueId());
-            session.stopBuffTask();
             session.restoreInventory();
             session.restoreGameMode();
             sessions.remove(player.getUniqueId());
@@ -202,7 +199,6 @@ public class ParkourManager {
                 player.removePotionEffect(PotionEffectType.JUMP);
                 player.removePotionEffect(PotionEffectType.SLOW_FALLING);
                 player.removePotionEffect(PotionEffectType.LEVITATION);
-                player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
                 player.setWalkSpeed(0.2f);
                 player.setCollidable(true);
                 
