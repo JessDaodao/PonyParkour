@@ -109,7 +109,7 @@ public class BlockEvent implements Listener {
             
             Vector velocity = new Vector(0, 0, 0);
             double strength = 3.0;
-            double upStrength = 1.8;
+            double upStrength = 1.5;
             double verticalBoost = 0.7;
 
             switch (facing) {
