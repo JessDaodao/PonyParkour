@@ -60,8 +60,6 @@ public class ParkourListener implements Listener {
                 session.setFalling(false);
                 session.resetStartTime();
                 player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOW_FALLING);
-                player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOW);
-                player.removePotionEffect(org.bukkit.potion.PotionEffectType.JUMP);
                 player.setWalkSpeed(0.2f);
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§a开始计时"));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);

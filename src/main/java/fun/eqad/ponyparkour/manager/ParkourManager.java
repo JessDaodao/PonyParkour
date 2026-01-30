@@ -85,8 +85,6 @@ public class ParkourManager {
         player.teleport(startLoc);
         
         player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 600, 1, false, false));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 600, 10, false, false));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 600, 200, false, false));
         player.setWalkSpeed(0);
         
         player.setHealth(player.getMaxHealth());
