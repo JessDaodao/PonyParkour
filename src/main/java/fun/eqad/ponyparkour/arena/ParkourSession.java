@@ -4,6 +4,11 @@ import org.bukkit.Location;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+import fun.eqad.ponyparkour.PonyParkour;
 
 public class ParkourSession {
     private final Player player;
@@ -18,6 +23,7 @@ public class ParkourSession {
     private boolean finished;
     private long finishTime;
     private long lastCheckpointTime;
+    private BukkitTask buffTask;
 
     public ParkourSession(Player player, ParkourArena arena) {
         this.player = player;
@@ -28,6 +34,24 @@ public class ParkourSession {
         this.playersHidden = false;
         this.finished = false;
         this.lastCheckpointTime = System.currentTimeMillis();
+        startBuffTask();
+    }
+
+    private void startBuffTask() {
+        this.buffTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (player.isOnline()) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 200, 0, false, false, false));
+                }
+            }
+        }.runTaskTimer(PonyParkour.getInstance(), 0L, 100L);
+    }
+
+    public void stopBuffTask() {
+        if (buffTask != null && !buffTask.isCancelled()) {
+            buffTask.cancel();
+        }
     }
 
     public void saveInventory() {
