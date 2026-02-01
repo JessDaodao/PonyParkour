@@ -1,5 +1,7 @@
 package fun.eqad.ponyparkour;
 
+import fun.eqad.ponyparkour.api.PonyParkourAPI;
+import fun.eqad.ponyparkour.api.PonyParkourAPIImpl;
 import fun.eqad.ponyparkour.command.CommandManager;
 import fun.eqad.ponyparkour.manager.ParkourManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -7,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class PonyParkour extends JavaPlugin {
 
     private static PonyParkour instance;
+    private PonyParkourAPI api;
     private ParkourManager parkourManager;
     private CommandManager commandManager;
     private fun.eqad.ponyparkour.gui.GUIManager guiManager;
@@ -37,6 +40,7 @@ public final class PonyParkour extends JavaPlugin {
         this.blockEvent = new fun.eqad.ponyparkour.block.BlockEvent(this);
         this.ghostBlockManager = new fun.eqad.ponyparkour.manager.GhostBlockManager(this);
         this.commandManager = new CommandManager(this);
+        this.api = new PonyParkourAPIImpl(this);
         
         getCommand("parkour").setExecutor(commandManager);
         getCommand("parkour").setTabCompleter(commandManager);
@@ -70,6 +74,9 @@ public final class PonyParkour extends JavaPlugin {
 
     public static PonyParkour getInstance() {
         return instance;
+    }
+    public PonyParkourAPI getAPI() {
+        return api;
     }
     public ParkourManager getParkourManager() {
         return parkourManager;
