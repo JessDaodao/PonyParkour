@@ -8,9 +8,9 @@ libraries:
 softdepend: [PlaceholderAPI]
 commands:
   parkour:
-    description: Main command for PonyParkour
-    usage: /parkour <subcommand>
-    aliases: [pk]
+    description: PonyParkour命令
+    usage: /parkour
+    aliases: ['pk']
 permissions:
   ponyparkour.admin:
     description: 允许使用管理员指令

@@ -14,8 +14,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GhostBlockManager implements Listener {
 
@@ -26,7 +26,7 @@ public class GhostBlockManager implements Listener {
 
     public GhostBlockManager(PonyParkour plugin) {
         this.plugin = plugin;
-        this.ghostBlocks = new HashSet<>();
+        this.ghostBlocks = ConcurrentHashMap.newKeySet();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         startTask();
         scanLoadedChunks();
