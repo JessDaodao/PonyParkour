@@ -24,6 +24,17 @@
 
 - `ponyparkour.admin` 管理员命令
 
+### PAPI变量
+
+- `%ponyparkour_arena%` 跑酷场地
+- `%ponyparkour_time_[ani]%` 跑酷时间
+- `%ponyparkour_checkpoint_[ani]%` 跑酷检查点
+- `%ponyparkour_rank_<arena>_<number>_[full|time|name]%` 跑酷排行
+
+### API接入
+
+查看[示例插件](https://github.com/JessDaodao/PonyParkourAPI_Example)
+
 ### 配置文件
 
 ```yaml

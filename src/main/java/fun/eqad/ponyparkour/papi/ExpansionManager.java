@@ -44,7 +44,6 @@ public class ExpansionManager extends PlaceholderExpansion {
         if (player == null) return "";
         if (params == null || params.isEmpty()) return null;
 
-        // %ponyparkour_arena%
         if (params.equalsIgnoreCase("arena")) {
             if (plugin.getParkourManager().isPlaying(player)) {
                 ParkourSession session = plugin.getParkourManager().getSession(player);
@@ -53,7 +52,6 @@ public class ExpansionManager extends PlaceholderExpansion {
             return "None";
         }
 
-        // %ponyparkour_time_[type]%
         if (params.startsWith("time")) {
             if (plugin.getParkourManager().isPlaying(player)) {
                 ParkourSession session = plugin.getParkourManager().getSession(player);
@@ -98,7 +96,6 @@ public class ExpansionManager extends PlaceholderExpansion {
             return "00:00.000";
         }
 
-        // %ponyparkour_checkpoint_[type]%
         if (params.startsWith("checkpoint")) {
             if (plugin.getParkourManager().isPlaying(player)) {
                 ParkourSession session = plugin.getParkourManager().getSession(player);
@@ -136,7 +133,6 @@ public class ExpansionManager extends PlaceholderExpansion {
             return "0/0";
         }
 
-        // %ponyparkour_rank_<arena>_<rank>_[type]%
         if (params.startsWith("rank_")) {
             String[] parts = params.split("_");
             if (parts.length >= 3) {
